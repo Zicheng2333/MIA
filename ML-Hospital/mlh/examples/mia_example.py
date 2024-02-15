@@ -1,6 +1,6 @@
 import torchvision
 import sys
-import vgg13
+
 
 # from mlh.attacks.membership_inference.attacks import AttackDataset, BlackBoxMIA, LabelOnlyMIA, MetricBasedMIA
 sys.path.append("..")
@@ -20,14 +20,13 @@ import torch.optim as optim
 torch.manual_seed(0)
 np.random.seed(0)
 torch.set_num_threads(1)
-import resnet18
-from torchvision.models.vision_transformer import vit_b_16, ViT_B_16_Weights
-from timm.models import create_model
+
+from models import vit
 
 def parse_args():
     parser = argparse.ArgumentParser('argument for training')
 
-    parser.add_argument('--batch-size', type=int, default=512,
+    parser.add_argument('--batch-size', type=int, default=256,
                         help='batch_size')
     parser.add_argument('--num-workers', type=int, default=10,
                         help='num of workers to use')
@@ -40,21 +39,21 @@ def parse_args():
     # model dataset
     parser.add_argument('--model', type=str, default='vit_b_16')
     parser.add_argument('--load-pretrained', type=str, default='no')
-    parser.add_argument('--dataset', type=str, default='CIFAR10',
+    parser.add_argument('--dataset', type=str, default='ImageNet',
                         help='dataset')
-    parser.add_argument('--num-class', type=int, default=10,
+    parser.add_argument('--num-class', type=int, default=1000,
                         help='number of classes')
     parser.add_argument('--training_type', type=str, default="Normal_f_vit_bt",
                         help='Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE')
     #parser.add_argument('--inference-dataset', type=str, default='ImageNet1K',
                        # help='if yes, load pretrained attack model to inference')
-    parser.add_argument('--inference-dataset', type=str, default='CIFAR10',
+    parser.add_argument('--inference-dataset', type=str, default='ImageNet',
                         help='if yes, load pretrained attack model to inference')
     parser.add_argument('--attack_type', type=str, default='black-box',
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
     parser.add_argument('--data-path', type=str, default='/data/home/xiezicheng/ML_hospital2/ML-Hospital/mlh/datasets',
                         help='data_path')
-    parser.add_argument('--input-shape', type=str, default="32,32,3",
+    parser.add_argument('--input-shape', type=str, default="256,256,3",
                         help='comma delimited input shape input')
     parser.add_argument('--log_path', type=str,
                         default='./save', help='')
@@ -69,33 +68,19 @@ def parse_args():
     return args
 
 
-def get_target_model(name="vit_b_16", num_classes=10):
-    #if name == "vit_b_16":
-       # model = torchvision.models.vit_b_16()
-       # model.heads = nn.Sequential(nn.Linear(768, 10))
+def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
-        #model = torchvision.models.vit_b_16(weights = ViT_B_16_Weights.IMAGENET1K_SWAG_LINEAR_V1)
-        #model.heads = nn.Sequential(nn.Linear(768, 10))
-        #model = resnet18.ResNet18()
-        #model.heads = nn.Sequential(nn.Linear(1000, 10))
-        model = create_model(
-            'vit_base_patch16_224',
-            pretrained=False,
-            img_size=224,
-            num_classes=0,
-            drop_rate=0.0,
-            drop_path_rate=0.1,
-            attn_drop_rate=0.0,
-            drop_block_rate=None,
-        )
-
-        model.heads = nn.Sequential(nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten(), nn.Linear(768, num_classes))
-
-
-        #model = torchvision.models.vgg16(pretrained = False)
-        #model = vgg13.Vgg13()
+        model = vit.VisionTransformer(num_classes=num_classes)
     else:
-        raise ValueError("Model not implemented yet :P")
+        raise ValueError("model not supported")
+
+
+    if resume:
+            print("resume!")
+            #model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
+            #model.heads = nn.Sequential(nn.Linear(768, 10))
+            #model.to(args.device)    
+    
     return model
 
 
@@ -120,8 +105,8 @@ if __name__ == "__main__":
     s = GetDataLoader(args)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
-    target_model = get_target_model(name="vit_b_16", num_classes=10)
-    shadow_model = get_target_model(name="vit_b_16", num_classes=10)
+    target_model = get_target_model(name="vit_b_16", num_classes=args.num_class)
+    shadow_model = get_target_model(name="vit_b_16", num_classes=args.num_class)
 
     checkpoint1 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.model}.pth')
     target_model.load_state_dict(checkpoint1)

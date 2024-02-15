@@ -83,7 +83,7 @@ class TrainTargetNormal(Trainer):
 
             for img, label in data_loader:
                 img, label = img.to(self.device), label.to(self.device)
-                logits = self.model.eval().forward(img)
+                logits = self.model.forward(img)
 
                 predicted = torch.argmax(logits, dim=1)
                 total += label.size(0)
@@ -124,7 +124,6 @@ class TrainTargetNormal(Trainer):
                     loss.backward()
                     self.optimizer.step()
 
-                # TODO 修改了test acc
                 trainLoss = f"Epoch {e},Train Loss: {total_train_loss/len(train_loader.dataset)}"
                 logx.msg(trainLoss)
 
