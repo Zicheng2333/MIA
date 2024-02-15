@@ -23,8 +23,9 @@ class GetDataLoader(object):
     def parse_dataset(self, dataset, train_transform, test_transform):
 
         if dataset in configs.SUPPORTED_IMAGE_DATASETS:
+            print("supported dataset: ", dataset)
             _loader = getattr(datasets, dataset)
-            if dataset == "ImageNet1K":
+            if dataset == "ImageNet":
                 transform = transforms.Compose([
                     transforms.Resize(256),
                     transforms.CenterCrop(224),

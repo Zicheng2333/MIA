@@ -94,9 +94,9 @@ class TrainTargetNormal(Trainer):
         return final_acc
 
     def train(self, train_loader, test_loader):
-
-        best_accuracy = 0
+        print("###################Start training###################")
         t_start = time.time()
+
         # check whether path exist
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
@@ -105,6 +105,8 @@ class TrainTargetNormal(Trainer):
         #     self.log_path, '%s_0.pth' % (self.model_save_name)))
 
         try:
+            test_acc = self.eval(test_loader)
+            print("Initial test acc:", test_acc)
             for e in range(1, self.epochs + 1):
                 total_train_loss = 0
                 batch_n = 0
@@ -129,42 +131,13 @@ class TrainTargetNormal(Trainer):
                 train_acc = self.eval(train_loader)
                 test_acc = self.eval(test_loader)
 
-                test_loss = self.eval_test(test_loader)
-                testLoss = f"Epoch {e}, Test Loss: {test_loss/len(test_loader.dataset)}"
-                logx.msg(testLoss)
-
-
                 logx.msg('Train Epoch: %d, Total Sample: %d, Train Acc: %.3f, Test Acc: %.3f, Total Time: %.3fs' % (
                     e, len(train_loader.dataset), train_acc, test_acc, time.time() - t_start))
                 self.scheduler.step()
-                # posteriors = F.softmax(logits, dim=1)
-                # print("prediction posteriors", posteriors[0])
-                # if e % 10 == 0:
-                #     torch.save(self.model.state_dict(), os.path.join(
-                #         self.log_path, '%s_%d.pth' % (self.model_save_name, e)))
 
-            # torch.save(self.model.state_dict(), os.path.join(
-            #     self.log_path, "%s.pth" % self.model_save_name))
+            torch.save(self.model.state_dict(), os.path.join(self.log_path, "%s.pth" % self.model_save_name))
         except KeyboardInterrupt:
             pass
 
-
-    def eval_test(self, test_loader):
-        self.model.eval()
-        test_loss = 0
-        correct = 0
-        total = 0
-        total_test_loss = 0
-        with torch.no_grad():
-            for img, label in test_loader:
-                img, label = img.to(self.device), label.to(self.device)
-                logits = self.model(img)
-                test_loss = self.criterion(logits, label).item()
-                _, predicted = logits.max(1)
-                total += label.size(0)
-                correct += predicted.eq(label).sum().item()
-                total_test_loss+=test_loss
-
-        return total_test_loss
 
 
