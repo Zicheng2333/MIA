@@ -28,6 +28,7 @@ np.random.seed(0)
 torch.set_num_threads(1)
 
 from models import vit
+from models import resnet
 
 
 def parse_args():
@@ -79,15 +80,19 @@ def parse_args():
 def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
+    elif name == 'resnet18':
+        model = resnet.ResNet18(num_classes=num_classes)
+    elif name == 'resnet50':
+        model = resnet.ResNet50(num_classes=num_classes)
+    elif name == 'resnet152':
+        model =resnet.ResNet152(num_classes=num_classes)
+
     else:
         raise ValueError("model not supported")
 
 
     if resume:
             print("resume!")
-            #model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
-            #model.heads = nn.Sequential(nn.Linear(768, 10))
-            #model.to(args.device)    
     
     return model
 
@@ -127,7 +132,7 @@ if __name__ == "__main__":
     if opt.training_type == "Normal_f_vit_bt":
 
         total_evaluator = TrainTargetNormal(
-            model=target_model, epochs=opt.epochs, log_path=save_pth)
+            model=target_model,device=opt.device,num_class=opt.num_class, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, test_loader)
 
     elif opt.training_type == "LabelSmoothing":

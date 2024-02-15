@@ -22,6 +22,7 @@ np.random.seed(0)
 torch.set_num_threads(1)
 
 from models import vit
+from models import resnet
 
 def parse_args():
     parser = argparse.ArgumentParser('argument for training')
@@ -71,16 +72,20 @@ def parse_args():
 def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
+    elif name == 'resnet18':
+        model = resnet.ResNet18(num_classes=num_classes)
+    elif name == 'resnet50':
+        model = resnet.ResNet50(num_classes=num_classes)
+    elif name == 'resnet152':
+        model =resnet.ResNet152(num_classes=num_classes)
     else:
         raise ValueError("model not supported")
 
 
     if resume:
-            print("resume!")
-            #model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
-            #model.heads = nn.Sequential(nn.Linear(768, 10))
-            #model.to(args.device)    
-    
+            print("resume!")   
+
+            
     return model
 
 
