@@ -27,7 +27,7 @@ torch.manual_seed(0)
 np.random.seed(0)
 torch.set_num_threads(1)
 
-import vit
+from models import vit
 
 
 def parse_args():
@@ -55,13 +55,13 @@ def parse_args():
     parser.add_argument('--load-pretrained', type=str, default='no')
     parser.add_argument('--task', type=str, default='mia',
                         help='specify the attack task, mia or ol')
-    parser.add_argument('--dataset', type=str, default='IMAGENET',
+    parser.add_argument('--dataset', type=str, default='ImageNet',
                         help='dataset')
     parser.add_argument('--num-class', type=int, default=1000,
                         help='number of classes')
-    parser.add_argument('--inference-dataset', type=str, default='IMAGENET',
+    parser.add_argument('--inference-dataset', type=str, default='ImageNet',
                         help='if yes, load pretrained the attack model to inference')
-    parser.add_argument('--data-path', type=str, default='data/dataset/imagenet/images/',
+    parser.add_argument('--data-path', type=str, default='/data/dataset/imagenet/images/',
                         help='data_path')
     parser.add_argument('--input-shape', type=str, default="256,256,3",
                         help='comma delimited input shape input')
@@ -76,7 +76,7 @@ def parse_args():
     return args
 
 
-def get_target_model(args,name="vit_b_16", num_classes=10,resume=False):
+def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
     else:
@@ -85,9 +85,9 @@ def get_target_model(args,name="vit_b_16", num_classes=10,resume=False):
 
     if resume:
             print("resume!")
-            model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
-            model.heads = nn.Sequential(nn.Linear(768, 10))
-            model.to(args.device)    
+            #model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
+            #model.heads = nn.Sequential(nn.Linear(768, 10))
+            #model.to(args.device)    
     
     return model
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     else:
         raise ValueError("opt.mode should be target or shadow")
 
-    target_model = get_target_model(opt, name="vit_b_16", num_classes=10,resume=opt.resume)
+    target_model = get_target_model(opt, name="vit_b_16", num_classes=opt.num_class,resume=opt.resume)
     print(target_model)
 
     save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
