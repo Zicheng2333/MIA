@@ -76,11 +76,9 @@ def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
 
 
     if resume:
-            print("resume!")
-            #model = model.load_state_dict(torch.load('/data/home/xiezicheng/ML_hospital2/ML-Hospital/models/vit_base_backbone_400ep.pth'))
-            #model.heads = nn.Sequential(nn.Linear(768, 10))
-            #model.to(args.device)    
-    
+            print("resume!")   
+
+            
     return model
 
 
