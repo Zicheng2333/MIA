@@ -3,6 +3,7 @@
 import numpy as np
 from typing import TYPE_CHECKING, Callable, List, Optional, Tuple, Union
 import argparse
+import torch
 
 
 def parse_args():
@@ -13,8 +14,7 @@ def parse_args():
     parser.add_argument('--num-workers', type=int, default=10,
                         help='num of workers to use')
 
-    parser.add_argument('--training_type', type=str, default="Normal_f_vit_bt",
-                        help='Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE')
+
     parser.add_argument('--mode', type=str, default="shadow",
                         help='target, shadow')
     parser.add_argument('--resume', type=bool, default=False,
@@ -40,7 +40,7 @@ def parse_args():
                         help='if yes, load pretrained attack model to inference')
     parser.add_argument('--attack_type', type=str, default='black-box',
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
-    parser.add_argument('--data-path', type=str, default='/data/home/xiezicheng/ML_hospital2/ML-Hospital/mlh/datasets',
+    parser.add_argument('--data-path', type=str, default='/data/dataset/imagenet/images',
                         help='data_path')
     parser.add_argument('--input-shape', type=str, default="256,256,3",
                         help='comma delimited input shape input')
