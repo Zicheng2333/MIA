@@ -30,51 +30,8 @@ torch.set_num_threads(1)
 from models import vit
 from models import resnet
 
+from mlh import utils
 
-def parse_args():
-    parser = argparse.ArgumentParser('argument for training')
-
-    parser.add_argument('--batch-size', type=int, default=256,
-                        help='batch_size')
-    parser.add_argument('--num-workers', type=int, default=10,
-                        help='num of workers to use')
-
-    parser.add_argument('--training_type', type=str, default="Normal_f_vit_bt",
-                        help='Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE')
-    parser.add_argument('--mode', type=str, default="shadow",
-                        help='target, shadow')
-    parser.add_argument('--resume', type=bool, default=False,
-                        help='True,False ') 
-
-    parser.add_argument('--epochs', type=int, default=5,
-                        help='number of training epochs')
-    parser.add_argument('--gpu', type=int, default=0,
-                        help='gpu index used for training')
-
-
-    parser.add_argument('--model', type=str, default='vit_b_16')
-    parser.add_argument('--load-pretrained', type=str, default='no')
-    parser.add_argument('--task', type=str, default='mia',
-                        help='specify the attack task, mia or ol')
-    parser.add_argument('--dataset', type=str, default='ImageNet',
-                        help='dataset')
-    parser.add_argument('--num-class', type=int, default=1000,
-                        help='number of classes')
-    parser.add_argument('--inference-dataset', type=str, default='ImageNet',
-                        help='if yes, load pretrained the attack model to inference')
-    parser.add_argument('--data-path', type=str, default='/data/dataset/imagenet/images/',
-                        help='data_path')
-    parser.add_argument('--input-shape', type=str, default="256,256,3",
-                        help='comma delimited input shape input')
-    parser.add_argument('--log_path', type=str,
-                        default='./save', help='data_path')
-
-    args = parser.parse_args()
-
-    args.input_shape = [int(item) for item in args.input_shape.split(',')]
-    args.device = 'cuda:%d' % args.gpu if torch.cuda.is_available() else 'cpu'
-    print("device:",args.device)
-    return args
 
 
 def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
@@ -96,24 +53,10 @@ def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     
     return model
 
-def evaluate(args, model, dataloader):
-    model.eval()
-    correct = 0
-    total = 0
-    for data in dataloader:
-        inputs, labels = data
-        inputs, labels = inputs.to(args.device), labels.to(args.device)
-        outputs = model(inputs)
-        _, predicted = outputs.max(1)
-        total += labels.size(0)
-        correct += predicted.eq(labels).sum().item()
-    model.train()
-    return correct / total
-
 
 if __name__ == "__main__":
 
-    opt = parse_args()
+    opt = utils.parse_args()
     s = GetDataLoader(opt)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
@@ -177,6 +120,4 @@ if __name__ == "__main__":
         raise ValueError(
             "opt.training_type should be Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE")
 
-    torch.save(target_model.state_dict(),
-               os.path.join(save_pth, f"{opt.model}.pth"))
     print("Finish Training")

@@ -24,49 +24,7 @@ torch.set_num_threads(1)
 from models import vit
 from models import resnet
 
-def parse_args():
-    parser = argparse.ArgumentParser('argument for training')
-
-    parser.add_argument('--batch-size', type=int, default=256,
-                        help='batch_size')
-    parser.add_argument('--num-workers', type=int, default=10,
-                        help='num of workers to use')
-
-    parser.add_argument('--epochs', type=int, default=100,
-                        help='number of training epochs')
-    parser.add_argument('--gpu', type=int, default=0,
-                        help='gpu index used for training')
-
-    # model dataset
-    parser.add_argument('--model', type=str, default='vit_b_16')
-    parser.add_argument('--load-pretrained', type=str, default='no')
-    parser.add_argument('--dataset', type=str, default='ImageNet',
-                        help='dataset')
-    parser.add_argument('--num-class', type=int, default=1000,
-                        help='number of classes')
-    parser.add_argument('--training_type', type=str, default="Normal_f_vit_bt",
-                        help='Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE')
-    #parser.add_argument('--inference-dataset', type=str, default='ImageNet1K',
-                       # help='if yes, load pretrained attack model to inference')
-    parser.add_argument('--inference-dataset', type=str, default='ImageNet',
-                        help='if yes, load pretrained attack model to inference')
-    parser.add_argument('--attack_type', type=str, default='black-box',
-                        help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
-    parser.add_argument('--data-path', type=str, default='/data/home/xiezicheng/ML_hospital2/ML-Hospital/mlh/datasets',
-                        help='data_path')
-    parser.add_argument('--input-shape', type=str, default="256,256,3",
-                        help='comma delimited input shape input')
-    parser.add_argument('--log_path', type=str,
-                        default='./save', help='')
-
-    args = parser.parse_args()
-
-    args.input_shape = [int(item) for item in args.input_shape.split(',')]
-    args.device = 'cuda:%d' % args.gpu if torch.cuda.is_available() else 'cpu'
-
-
-
-    return args
+from mlh import utils
 
 
 def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
@@ -89,24 +47,9 @@ def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
     return model
 
 
-def evaluate(model, dataloader):
-    model.eval()
-    correct = 0
-    total = 0
-    for data in dataloader:
-        inputs, labels = data
-        inputs, labels = inputs.to(args.device), labels.to(args.device)
-        outputs = model(inputs)
-        _, predicted = outputs.max(1)
-        total += labels.size(0)
-        correct += predicted.eq(labels).sum().item()
-    model.train()
-    return correct / total
-
-
 if __name__ == "__main__":
 
-    args = parse_args()
+    args = utils.parse_args()
     s = GetDataLoader(args)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
@@ -126,9 +69,6 @@ if __name__ == "__main__":
     print(shadow_model)
 
     # load target/shadow model to conduct the attacks
-
-
-
 
 
     # generate attack dataset
