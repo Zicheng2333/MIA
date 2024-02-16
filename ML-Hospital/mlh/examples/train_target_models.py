@@ -124,7 +124,7 @@ if __name__ == "__main__":
     else:
         raise ValueError("opt.mode should be target or shadow")
 
-    target_model = get_target_model(opt, name="vit_b_16", num_classes=opt.num_class,resume=opt.resume)
+    target_model = get_target_model(opt, name=opt.model, num_classes=opt.num_class,resume=opt.resume)
     print(target_model)
 
     save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
