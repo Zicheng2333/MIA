@@ -13,16 +13,13 @@ from mlh.defenses.membership_inference.LabelSmoothing import TrainTargetLabelSmo
 from mlh.defenses.membership_inference.MixupMMD import TrainTargetMixupMMD
 from mlh.defenses.membership_inference.PATE import TrainTargetPATE
 from mlh.defenses.membership_inference.Normal import TrainTargetNormal
-from tqdm import tqdm
+
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+
 from mlh.data_preprocessing.data_loader_vit import GetDataLoader
-from torchvision import datasets
-import torchvision.transforms as transforms
-import argparse
+
 import numpy as np
-import torch.optim as optim
+
 torch.manual_seed(0)
 np.random.seed(0)
 torch.set_num_threads(1)

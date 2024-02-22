@@ -42,8 +42,10 @@ def parse_args():
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
     parser.add_argument('--data-path', type=str, default='data/dataset/imagenet/images/',
                         help='data_path')
-    parser.add_argument('--input-shape', type=str, default="256,256,3",
-                        help='comma delimited input shape input')
+    #parser.add_argument('--input-shape', type=str, default="256,256,3",
+    #                    help='comma delimited input shape input')
+    #TODO 匹配模型的输入尺寸
+
     parser.add_argument('--log_path', type=str,
                         default='./save', help='')
 

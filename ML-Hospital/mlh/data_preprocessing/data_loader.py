@@ -9,6 +9,7 @@ from torchvision import datasets
 from PIL import Image
 from tqdm import tqdm
 from mlh.data_preprocessing import configs
+import os
 
 torch.manual_seed(0)
 
@@ -23,27 +24,52 @@ class GetDataLoader(object):
 
         if dataset in configs.SUPPORTED_IMAGE_DATASETS:
             _loader = getattr(datasets, dataset)
-            if dataset != "EMNIST":
+            if dataset == "CINIC-10":
                 train_dataset = _loader(root=self.data_path,
                                         train=True,
                                         transform=train_transform,
-                                        download=True)
+                                        download=False)
+                val_dataset = _loader(root=self.data_path,
+                                      train=False,
+                                      transform=test_transform,
+                                      download=False)
                 test_dataset = _loader(root=self.data_path,
                                        train=False,
                                        transform=test_transform,
-                                       download=True)
-            else:
+                                       download=False)
+                dataset = train_dataset+val_dataset+test_dataset
+            elif dataset =='ImageNet':
+                train_dataset = _loader(root=self.data_path,
+                                        split='train',
+                                        transform=train_transform,
+                                        download=False)
+                val_dataset = _loader(root=self.data_path,
+                                        split='val',
+                                        transform=train_transform,
+                                        download=False)
+                dataset = train_dataset+val_dataset
+            elif dataset =='EMNIST':
                 train_dataset = _loader(root=self.data_path,
                                         train=True,
                                         split="byclass",
                                         transform=train_transform,
-                                        download=True)
+                                        download=False)
                 test_dataset = _loader(root=self.data_path,
                                        train=False,
                                        split="byclass",
                                        transform=test_transform,
-                                       download=True)
-            dataset = train_dataset + test_dataset
+                                       download=False)
+                dataset = train_dataset + test_dataset
+            else:
+                train_dataset = _loader(root=self.data_path,
+                                        train=True,
+                                        transform=train_transform,
+                                        download=False)
+                test_dataset = _loader(root=self.data_path,
+                                       train=False,
+                                       transform=test_transform,
+                                       download=False)
+                dataset = train_dataset + test_dataset
 
         else:
             raise ValueError("Dataset Not Supported: ", dataset)
