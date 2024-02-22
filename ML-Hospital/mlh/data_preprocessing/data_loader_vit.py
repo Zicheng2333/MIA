@@ -80,7 +80,7 @@ class GetDataLoader(object):
         if dataset in configs.SUPPORTED_IMAGE_DATASETS:
             if dataset == "CINIC-10":
                 train_dir = os.path.join(self.data_path, 'train')
-                val_dir = os.path.join(self.data_path, 'val')
+                val_dir = os.path.join(self.data_path, 'valid')
                 test_dir = os.path.join(self.data_path, 'test')
                 train_dataset = torchvision.datasets.ImageFolder(train_dir, transform=train_transform)
                 val_dataset = torchvision.datasets.ImageFolder(val_dir, transform=train_transform)
