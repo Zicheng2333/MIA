@@ -78,7 +78,6 @@ class GetDataLoader(object):
     def parse_dataset(self, dataset, train_transform, test_transform):
 
         if dataset in configs.SUPPORTED_IMAGE_DATASETS:
-            _loader = getattr(datasets, dataset)
             if dataset == "CINIC-10":
                 train_dir = os.path.join(self.data_path, 'train')
                 val_dir = os.path.join(self.data_path, 'val')
@@ -94,6 +93,7 @@ class GetDataLoader(object):
                 val_dataset = torchvision.datasets.ImageFolder(val_dir, transform=train_transform)
                 dataset = train_dataset+val_dataset
             elif dataset =='EMNIST':
+                _loader = getattr(datasets, dataset)
                 train_dataset = _loader(root=self.data_path,
                                         train=True,
                                         split="byclass",
@@ -106,6 +106,7 @@ class GetDataLoader(object):
                                        download=False)
                 dataset = train_dataset + test_dataset
             else:
+                _loader = getattr(datasets, dataset)
                 train_dataset = _loader(root=self.data_path,
                                         train=True,
                                         transform=train_transform,
