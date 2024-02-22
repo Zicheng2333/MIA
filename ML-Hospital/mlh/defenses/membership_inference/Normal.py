@@ -114,7 +114,7 @@ class TrainTargetNormal(Trainer):
                 train_acc = self.eval(train_loader)
                 test_acc = self.eval(test_loader)
 
-                self.log_to_csv(e, len(train_loader.dataset), trainLoss, train_acc, test_acc, time.time() - t_start)
+                self.log_to_csv(e, len(train_loader.dataset), total_train_loss/len(train_loader.dataset), train_acc, test_acc, time.time() - t_start)
 
                 logx.msg('Train Epoch: %d, Total Sample: %d, Train Acc: %.3f, Test Acc: %.3f, Total Time: %.3fs' % (
                     e, len(train_loader.dataset), train_acc, test_acc, time.time() - t_start))
