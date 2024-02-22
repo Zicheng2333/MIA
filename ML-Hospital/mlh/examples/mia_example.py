@@ -27,11 +27,13 @@ from models import resnet
 from mlh import utils
 
 
-def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
+def get_target_model(name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
     elif name == 'resnet18':
         model = resnet.ResNet18(num_classes=num_classes)
+    elif name == 'resnet34':
+        model = resnet.ResNet34(num_classes=num_classes)
     elif name == 'resnet50':
         model = resnet.ResNet50(num_classes=num_classes)
     elif name == 'resnet152':
@@ -53,8 +55,8 @@ if __name__ == "__main__":
     s = GetDataLoader(args)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
-    target_model = get_target_model(name="vit_b_16", num_classes=args.num_class)
-    shadow_model = get_target_model(name="vit_b_16", num_classes=args.num_class)
+    target_model = get_target_model(name=args.model, num_classes=args.num_class)
+    shadow_model = get_target_model(name=args.model, num_classes=args.num_class)
 
     checkpoint1 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.model}.pth')
     target_model.load_state_dict(checkpoint1)

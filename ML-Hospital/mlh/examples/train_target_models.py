@@ -31,11 +31,13 @@ from mlh import utils
 
 
 
-def get_target_model(args,name="vit_b_16", num_classes=1000,resume=False):
+def get_target_model(name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
     elif name == 'resnet18':
         model = resnet.ResNet18(num_classes=num_classes)
+    elif name == 'resnet34':
+        model = resnet.ResNet34(num_classes=num_classes)
     elif name == 'resnet50':
         model = resnet.ResNet50(num_classes=num_classes)
     elif name == 'resnet152':
@@ -64,7 +66,7 @@ if __name__ == "__main__":
     else:
         raise ValueError("opt.mode should be target or shadow")
 
-    target_model = get_target_model(opt, name=opt.model, num_classes=opt.num_class,resume=opt.resume)
+    target_model = get_target_model(name=opt.model, num_classes=opt.num_class,resume=opt.resume)
     print(target_model)
 
     save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
