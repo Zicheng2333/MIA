@@ -9,9 +9,9 @@ import torch
 def parse_args():
     parser = argparse.ArgumentParser('argument for training')
 
-    parser.add_argument('--batch-size', type=int, default=256,
+    parser.add_argument('--batch_size', type=int, default=256,
                         help='batch_size')
-    parser.add_argument('--num-workers', type=int, default=10,
+    parser.add_argument('--num_workers', type=int, default=10,
                         help='num of workers to use')
 
 
@@ -27,20 +27,20 @@ def parse_args():
 
     # model dataset
     parser.add_argument('--model', type=str, default='vit_b_16')
-    parser.add_argument('--load-pretrained', type=str, default='no')
+    parser.add_argument('--load_pretrained', type=str, default='no')
     parser.add_argument('--dataset', type=str, default='ImageNet',
                         help='dataset')
-    parser.add_argument('--num-class', type=int, default=1000,
+    parser.add_argument('--num_class', type=int, default=1000,
                         help='number of classes')
     parser.add_argument('--training_type', type=str, default="Normal_f_vit_bt",
                         help='Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE')
     #parser.add_argument('--inference-dataset', type=str, default='ImageNet1K',
                        # help='if yes, load pretrained attack model to inference')
-    parser.add_argument('--inference-dataset', type=str, default='ImageNet',
+    parser.add_argument('--inference_dataset', type=str, default='ImageNet',
                         help='if yes, load pretrained attack model to inference')
     parser.add_argument('--attack_type', type=str, default='black-box',
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
-    parser.add_argument('--data-path', type=str, default='data/dataset/imagenet/images/',
+    parser.add_argument('--data_path', type=str, default='data/dataset/imagenet/images/',
                         help='data_path')
     #parser.add_argument('--input-shape', type=str, default="256,256,3",
     #                    help='comma delimited input shape input')

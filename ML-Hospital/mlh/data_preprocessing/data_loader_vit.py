@@ -19,7 +19,7 @@ class GetDataLoader(object):
     def __init__(self, args):
         self.args = args
         self.data_path = args.data_path
-        self.input_shape = args.input_shape
+        #self.input_shape = args.input_shape
 
     '''    def parse_dataset(self, dataset, train_transform, test_transform):
 
