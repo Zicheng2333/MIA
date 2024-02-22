@@ -51,7 +51,7 @@ def parse_args():
 
     args = parser.parse_args()
 
-    args.input_shape = [int(item) for item in args.input_shape.split(',')]
+    #args.input_shape = [int(item) for item in args.input_shape.split(',')]
     args.device = 'cuda:%d' % args.gpu if torch.cuda.is_available() else 'cpu'
 
     return args
