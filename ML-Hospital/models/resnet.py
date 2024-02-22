@@ -46,7 +46,7 @@ class ResNet34(nn.Module):
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)),
             nn.Flatten(),
-            nn.Linear(2048, num_classes)
+            nn.Linear(512, num_classes)
         )
 
     def forward(self, x):
