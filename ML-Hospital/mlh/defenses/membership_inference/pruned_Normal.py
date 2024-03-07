@@ -121,7 +121,7 @@ class TrainTargetNormal(Trainer):
                 total += len(target)
         return (correct / total).item(), (loss / total).item()
 
-    def train_model(self,
+    def train(self,
             model,
             train_loader,
             test_loader,
@@ -220,7 +220,7 @@ class TrainTargetNormal(Trainer):
                 if not self.args.sl_restore:
                     self.args.logger.info("Regularizing...")
 
-                    self.train_model(
+                    self.train(
                         self.model,
                         train_loader=train_loader,
                         test_loader=test_loader,
@@ -269,7 +269,7 @@ class TrainTargetNormal(Trainer):
             print("###################Start fine-tuning###################")
             # TODO 2. Finetuning
             self.args.logger.info("Finetuning...")
-            self.train_model(
+            self.train(
                 self.model,
                 epochs=self.args.total_epochs,
                 lr=self.args.lr,
@@ -286,7 +286,7 @@ class TrainTargetNormal(Trainer):
             )
             self.args.logger.info("Params: {:.2f} M".format(params / 1e6))
             self.args.logger.info("ops: {:.2f} M".format(ops / 1e6))
-            self.train_model(
+            self.train(
                 model=self.model,
                 epochs=self.args.total_epochs,
                 lr=self.args.lr,
