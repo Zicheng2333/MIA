@@ -15,7 +15,7 @@ def parse_args():
                         help='num of workers to use')
 
 
-    parser.add_argument('--mode', type=str, default="shadow",
+    parser.add_argument('--mia_mode', type=str, default="shadow",
                         help='target, shadow')
     parser.add_argument('--resume', type=bool, default=False,
                         help='True,False ')
@@ -61,7 +61,7 @@ def parse_args():
 
 
     #TODO For pruning
-    parser.add_argument("--method", type=str, default=None)
+    parser.add_argument("--method", type=str, default=None) #pruning method
     parser.add_argument("--speed-up", type=float, default=2)
     parser.add_argument("--max-pruning-ratio", type=float, default=1.0)
     parser.add_argument("--soft-keeping-ratio", type=float, default=0.0)
@@ -82,8 +82,6 @@ def parse_args():
 
     #args.input_shape = [int(item) for item in args.input_shape.split(',')]
     args.device = 'cuda:%d' % args.gpu if torch.cuda.is_available() else 'cpu'
-
-
 
     return args
 

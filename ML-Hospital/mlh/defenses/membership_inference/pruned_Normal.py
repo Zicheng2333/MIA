@@ -1,8 +1,7 @@
 import torch
-import numpy as np
+
 import os
 
-from runx.logx import logx
 import torch.nn.functional as F
 from mlh.defenses.membership_inference.trainer import Trainer
 import torch.nn as nn
@@ -11,10 +10,6 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
 import torch.nn.utils.prune
-
-import csv
-
-from mlh.defenses import pruning_tools
 
 import mlh.defenses.torch_pruning as tp
 from functools import partial
@@ -32,7 +27,6 @@ class TrainTargetNormal(Trainer):
         self.num_class = num_class
         self.epochs = epochs
 
-
         self.model = self.model.to(self.device)
 
         self.optimizer = torch.optim.SGD(
@@ -45,29 +39,9 @@ class TrainTargetNormal(Trainer):
         self.log_path = log_path
 
         self.model_name = model_name
-        self.logging_path = os.path.join(self.log_path, self.model_name)
-        logx.initialize(logdir=self.logging_path,
-                        coolname=False, tensorboard=False)
-        self.log_file = os.path.join(self.logging_path, 'training_log.csv')
 
         self.args = args
 
-        with open(self.log_file, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["Epoch", 'Total Sample', "Train Loss", "Train Accuracy", "Test Accuracy", 'Total Time'])
-
-    def log_to_csv(self, epoch, total_sample, train_loss, train_acc, test_acc, total_time):
-        with open(self.log_file, 'a', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow([epoch, total_sample, train_loss, train_acc, test_acc, total_time])
-
-    @staticmethod
-    def _sample_weight_decay():
-        # We selected the l2 regularization parameter from a range of 45 logarithmically spaced values between 10−6 and 105
-        weight_decay = np.logspace(-6, 5, num=45, base=10.0)
-        weight_decay = np.random.choice(weight_decay)
-        print("Sampled weight decay:", weight_decay)
-        return weight_decay
 
     def get_pruner(self, model, example_inputs):
         self.args.sparsity_learning = False
@@ -130,20 +104,18 @@ class TrainTargetNormal(Trainer):
         )
         return pruner
 
-
-    def eval(model, test_loader, device=None):
+    def eval(self,  test_loader):
         correct = 0
         total = 0
         loss = 0
-        if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model.to(device)
-        model.eval()
+
+        self.model.to(self.device)
+        self.model.eval()
         with torch.no_grad():
             for i, (data, target) in enumerate(test_loader):
-                data, target = data.to(device), target.to(device)
-                out = model(data)
-                loss += F.cross_entropy(out, target, reduction="sum")
+                data, target = data.to(self.device), target.to(self.device)
+                out = self.model(data)
+                loss += self.criterion(out, target, reduction="sum")
                 pred = out.max(1)[1]
                 correct += (pred == target).sum()
                 total += len(target)
@@ -223,74 +195,105 @@ class TrainTargetNormal(Trainer):
         self.args.logger.info("Best Acc=%.4f" % (best_acc))
 
     def train_pruned_model(self, train_loader, test_loader):
-        print("###################Start pruned_training###################")
+        if self.args.mode == "prune":
+            prefix = 'global' if self.args.global_pruning else 'local'  # 全局或局部剪枝
+            logger_name = "{}-{}-{}-{}".format(self.args.dataset, prefix, self.args.method, self.args.model)
+            self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode, logger_name)
+            log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
+        elif self.args.mode == "pretrain":
+            self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
+            logger_name = "{}-{}".format(self.args.dataset, self.args.model)
+            log_file = "{}/{}.txt".format(self.args.output_dir, logger_name)
+        print("###################Start pruning###################")
         images, _ = next(iter(train_loader))
         example_input = images[0].unsqueeze(0).to(self.device)
 
-        pruner = pruning_tools.get_pruner(self.model, example_inputs=example_input)
-        # 0. Sparsity Learning
-        if self.args.sparsity_learning:
-            reg_pth = "reg_{}_{}_{}_{}.pth".format(self.args.dataset, self.args.model, self.args.method, self.args.reg)
-            reg_pth = os.path.join(os.path.join(self.args.output_dir, reg_pth))
-            if not self.args.sl_restore:
-                self.args.logger.info("Regularizing...")
+        if self.args.mode == 'prune':
+            pruner = self.get_pruner(self.model, example_inputs=example_input)
 
-                self.train_model(
-                    self.model,
-                    train_loader=train_loader,
-                    test_loader=test_loader,
-                    epochs=self.args.sl_total_epochs,
-                    lr=self.args.sl_lr,
-                    lr_decay_milestones=self.args.sl_lr_decay_milestones,
-                    lr_decay_gamma=self.args.lr_decay_gamma,
-                    pruner=pruner,
-                    save_state_dict_only=True,
-                    save_as=reg_pth,
+            # TODO 0. Sparsity Learning
+            print("###################Start sparsity learning###################")
+            if self.args.sparsity_learning:
+                reg_pth = "reg_{}_{}_{}_{}.pth".format(self.args.dataset, self.args.model, self.args.method,
+                                                       self.args.reg)
+                reg_pth = os.path.join(os.path.join(self.args.log_path, reg_pth))
+                if not self.args.sl_restore:
+                    self.args.logger.info("Regularizing...")
+
+                    self.train_model(
+                        self.model,
+                        train_loader=train_loader,
+                        test_loader=test_loader,
+                        epochs=self.args.sl_total_epochs,
+                        lr=self.args.sl_lr,
+                        lr_decay_milestones=self.args.sl_lr_decay_milestones,
+                        lr_decay_gamma=self.args.lr_decay_gamma,
+                        pruner=pruner,
+                        save_state_dict_only=True,
+                        save_as=reg_pth,
+                    )
+                self.args.logger.info("Loading the sparse model from {}...".format(reg_pth))
+                self.model.load_state_dict(torch.load(reg_pth, map_location=self.args.device))
+
+            print("###################Start pruning###################")
+            # TODO 1. Pruning
+            self.model.eval()
+            ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
+            ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.args.device)
+            self.args.logger.info("Pruning...")
+            self.progressive_pruning(pruner, self.model, speed_up=self.args.speed_up,
+                                     example_inputs=self.example_inputs)
+            del pruner  # remove reference
+            self.args.logger.info(self.model)
+            pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
+            pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.args.device)
+
+            self.args.logger.info(
+                "Params: {:.2f} M => {:.2f} M ({:.2f}%)".format(
+                    ori_size / 1e6, pruned_size / 1e6, pruned_size / ori_size * 100
                 )
-            self.args.logger.info("Loading the sparse model from {}...".format(reg_pth))
-            self.model.load_state_dict(torch.load(reg_pth, map_location=self.args.device))
-
-        # 1. Pruning
-        self.model.eval()
-        ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
-        ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.args.device)
-        self.args.logger.info("Pruning...")
-        self.progressive_pruning(pruner, self.model, speed_up=self.args.speed_up, example_inputs=self.example_inputs)
-        del pruner  # remove reference
-        self.args.logger.info(self.model)
-        pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
-        pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.args.device)
-
-        self.args.logger.info(
-            "Params: {:.2f} M => {:.2f} M ({:.2f}%)".format(
-                ori_size / 1e6, pruned_size / 1e6, pruned_size / ori_size * 100
             )
-        )
-        self.args.logger.info(
-            "FLOPs: {:.2f} M => {:.2f} M ({:.2f}%, {:.2f}X )".format(
-                ori_ops / 1e6,
-                pruned_ops / 1e6,
-                pruned_ops / ori_ops * 100,
-                ori_ops / pruned_ops,
+            self.args.logger.info(
+                "FLOPs: {:.2f} M => {:.2f} M ({:.2f}%, {:.2f}X )".format(
+                    ori_ops / 1e6,
+                    pruned_ops / 1e6,
+                    pruned_ops / ori_ops * 100,
+                    ori_ops / pruned_ops,
+                )
             )
-        )
-        self.args.logger.info("Acc: {:.4f} => {:.4f}".format(ori_acc, pruned_acc))
-        self.args.logger.info(
-            "Val Loss: {:.4f} => {:.4f}".format(ori_val_loss, pruned_val_loss)
-        )
+            self.args.logger.info("Acc: {:.4f} => {:.4f}".format(ori_acc, pruned_acc))
+            self.args.logger.info(
+                "Val Loss: {:.4f} => {:.4f}".format(ori_val_loss, pruned_val_loss)
+            )
 
-        # 2. Finetuning
-        self.args.logger.info("Finetuning...")
-        self.train_model(
-            self.model,
-            epochs=self.args.total_epochs,
-            lr=self.args.lr,
-            lr_decay_milestones=self.args.lr_decay_milestones,
-            train_loader=train_loader,
-            test_loader=test_loader,
-            device=self.args.device,
-            save_state_dict_only=False,
-        )
+            print("###################Start fine-tuning###################")
+            # TODO 2. Finetuning
+            self.args.logger.info("Finetuning...")
+            self.train_model(
+                self.model,
+                epochs=self.args.total_epochs,
+                lr=self.args.lr,
+                lr_decay_milestones=self.args.lr_decay_milestones,
+                train_loader=train_loader,
+                test_loader=test_loader,
+                device=self.device,
+                save_state_dict_only=False,
+            )
+
+        elif self.args.mode == 'pretrain':
+            ops, params = tp.utils.count_ops_and_params(
+                self.model, example_inputs=example_input,
+            )
+            self.args.logger.info("Params: {:.2f} M".format(params / 1e6))
+            self.args.logger.info("ops: {:.2f} M".format(ops / 1e6))
+            self.train_model(
+                model=self.model,
+                epochs=self.args.total_epochs,
+                lr=self.args.lr,
+                lr_decay_milestones=self.args.lr_decay_milestones,
+                train_loader=train_loader,
+                test_loader=test_loader
+            )
 
 
 

@@ -71,16 +71,16 @@ if __name__ == "__main__":
     s = GetDataLoader(opt)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
-    if opt.mode == "target":
+    if opt.mia_mode == "target":
         train_loader, inference_loader, test_loader = target_train_loader, target_inference_loader, target_test_loader,
-    elif opt.mode == "shadow":
+    elif opt.mia_mode == "shadow":
         train_loader, inference_loader, test_loader = shadow_train_loader, shadow_inference_loader, shadow_test_loader
     else:
-        raise ValueError("opt.mode should be target or shadow")
+        raise ValueError("opt.mia_mode should be target or shadow")
 
     target_model = get_target_model(name=opt.model, num_classes=opt.num_class,resume=opt.resume,load_path=opt.load_path)
 
-    save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
+    save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mia_mode}'
 
     if opt.training_type == "Normal_f_vit_bt":
 
