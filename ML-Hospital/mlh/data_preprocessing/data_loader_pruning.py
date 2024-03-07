@@ -29,7 +29,7 @@ class GetDataLoader(object):
     def parse_dataset(self, dataset, train_transform, test_transform):
 
         if dataset in configs.SUPPORTED_IMAGE_DATASETS:
-            if dataset == "CINIC-10":
+            if dataset == "CINIC10":
                 train_dir = os.path.join(self.data_path, 'train')
                 val_dir = os.path.join(self.data_path, 'valid')
                 test_dir = os.path.join(self.data_path, 'test')
