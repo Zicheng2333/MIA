@@ -49,9 +49,8 @@ def get_target_model(name="vit_b_16", num_classes=1000,resume=False,load_path=''
         model =resnet.resnet152(num_classes=num_classes)
     elif name == 'resnet56':
         model = resnet_tiny.resnet56(num_classes=num_classes)
-
     else:
-        raise ValueError("model not supported")
+        raise ValueError("model not supported",name)
 
 
     if resume:
