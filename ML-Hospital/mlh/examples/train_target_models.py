@@ -18,39 +18,49 @@ from mlh.defenses.membership_inference.pruned_Normal import TrainTargetNormal
 
 import torch
 
-from mlh.data_preprocessing.data_loader_vit import GetDataLoader
+#from mlh.data_preprocessing.data_loader_vit import GetDataLoader
+from mlh.data_preprocessing.data_loader_pruning import GetDataLoader
 
 import numpy as np
+
+import torch.nn as nn
 
 torch.manual_seed(0)
 np.random.seed(0)
 torch.set_num_threads(1)
 
 from models import vit
-from models import resnet
+from models import resnet,resnet_tiny
 
 from mlh import utils
 
 
 
-def get_target_model(name="vit_b_16", num_classes=1000,resume=False):
+def get_target_model(name="vit_b_16", num_classes=1000,resume=False,load_path=''):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
     elif name == 'resnet18':
-        model = resnet.ResNet18(num_classes=num_classes)
+        model = resnet.resnet18(num_classes=num_classes)
     elif name == 'resnet34':
-        model = resnet.ResNet34(num_classes=num_classes)
+        model = resnet.resnet34(num_classes=num_classes)
     elif name == 'resnet50':
-        model = resnet.ResNet50(num_classes=num_classes)
+        model = resnet.resnet50(num_classes=num_classes)
     elif name == 'resnet152':
-        model =resnet.ResNet152(num_classes=num_classes)
+        model =resnet.resnet152(num_classes=num_classes)
+    elif name == 'resnet56':
+        model = resnet_tiny.resnet56(num_classes=num_classes)
 
     else:
         raise ValueError("model not supported")
 
 
     if resume:
-            print("resume!")
+        loaded = torch.load(load_path, map_location="cpu")
+        if isinstance(loaded, nn.Module):
+            model = loaded
+        else:
+            model.load_state_dict(loaded)
+        print("model resumed from {restore}!".format(restore=load_path))
     
     return model
 
@@ -68,35 +78,32 @@ if __name__ == "__main__":
     else:
         raise ValueError("opt.mode should be target or shadow")
 
-    target_model = get_target_model(name=opt.model, num_classes=opt.num_class,resume=opt.resume)
-
+    target_model = get_target_model(name=opt.model, num_classes=opt.num_class,resume=opt.resume,load_path=opt.load_path)
 
     save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
 
     if opt.training_type == "Normal_f_vit_bt":
 
-        total_evaluator = TrainTargetNormal(
+        total_evaluator = TrainTargetNormal(args=opt,
             model=target_model,model_name=opt.model,device=opt.device,num_class=opt.num_class, epochs=opt.epochs, log_path=save_pth)
-        total_evaluator.train(train_loader, test_loader)
+        total_evaluator.train_pruned_model(train_loader, test_loader)
+
 
     elif opt.training_type == "LabelSmoothing":
 
         total_evaluator = TrainTargetLabelSmoothing(
             model=target_model, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, test_loader)
-
     elif opt.training_type == "AdvReg":
 
         total_evaluator = TrainTargetAdvReg(
             model=target_model, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, inference_loader, test_loader)
         model = total_evaluator.model
-
     elif opt.training_type == "DP":
         total_evaluator = TrainTargetDP(
             model=target_model, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, test_loader)
-
     elif opt.training_type == "MixupMMD":
 
         target_train_sorted_loader, target_inference_sorted_loader, shadow_train_sorted_loader, shadow_inference_sorted_loader, start_index_target_inference, start_index_shadow_inference, target_inference_sorted, shadow_inference_sorted = s.get_sorted_data_mixup_mmd()
@@ -110,13 +117,11 @@ if __name__ == "__main__":
             model=target_model, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, train_loader_ordered,
                               inference_loader_ordered, test_loader, starting_index, inference_sorted)
-
     elif opt.training_type == "PATE":
 
         total_evaluator = TrainTargetPATE(
             model=target_model, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train(train_loader, inference_loader, test_loader)
-
     else:
         raise ValueError(
             "opt.training_type should be Normal, LabelSmoothing, AdvReg, DP, MixupMMD, PATE")

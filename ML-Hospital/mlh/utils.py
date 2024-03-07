@@ -42,12 +42,23 @@ def parse_args():
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
     parser.add_argument('--data_path', type=str, default='data/dataset/imagenet/images/',
                         help='data_path')
+    parser.add_argument('--load_path', type=str, default='data/home/xiezicheng/MIA',
+                        help='data_path')
     #parser.add_argument('--input-shape', type=str, default="256,256,3",
     #                    help='comma delimited input shape input')
     #TODO 匹配模型的输入尺寸
 
     parser.add_argument('--log_path', type=str,
                         default='./save', help='')
+
+
+    #TODO Basic options
+    #TODO parser.add_argument("--mode", type=str, required=True, choices=["pretrain", "prune", "test"])
+
+    parser.add_argument("--lr-decay-milestones", default="60,80", type=str, help="milestones for learning rate decay")
+    parser.add_argument("--lr-decay-gamma", default=0.1, type=float)
+    parser.add_argument("--lr", default=0.01, type=float, help="learning rate")
+
 
     #TODO For pruning
     parser.add_argument("--method", type=str, default=None)

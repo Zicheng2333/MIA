@@ -1,5 +1,4 @@
 
-
 import torchvision
 import torchvision.transforms as transforms
 import torch
@@ -14,67 +13,18 @@ import os
 
 torch.manual_seed(0)
 
+NORMALIZE_DICT = {
+    'CIFAR10':  dict( mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010) ),
+    'CINIC10':  dict( mean=(0.4914, 0.4822, 0.4465), std=(0.2023, 0.1994, 0.2010) ),
+    'CIFAR100': dict( mean=(0.5071, 0.4867, 0.4408), std=(0.2675, 0.2565, 0.2761) ),
 
+}
 
 class GetDataLoader(object):
     def __init__(self, args):
         self.args = args
         self.data_path = args.data_path
-        #self.input_shape = args.input_shape
-
-    '''    def parse_dataset(self, dataset, train_transform, test_transform):
-
-        if dataset in configs.SUPPORTED_IMAGE_DATASETS:
-            print("supported dataset: ", dataset)
-            _loader = getattr(datasets, dataset)
-            if dataset == "ImageNet":
-                transform = transforms.Compose([
-                    transforms.Resize(256),
-                    transforms.CenterCrop(224),
-                    transforms.ToTensor(),
-                    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std =[0.229, 0.224, 0.225])
-                    ])
-                dataset = torchvision.datasets.ImageFolder(self.data_path, transform)
-            elif dataset != "EMNIST":
-                train_dataset = _loader(root=self.data_path,
-                                        train=True,
-                                        transform=train_transform,
-                                        download=True)
-                test_dataset = _loader(root=self.data_path,
-                                       train=False,
-                                       transform=test_transform,
-                                       download=True)
-                dataset = train_dataset + test_dataset
-            else:
-                train_dataset = _loader(root=self.data_path,
-                                        train=True,
-                                        split="byclass",
-                                        transform=train_transform,
-                                        download=True)
-                test_dataset = _loader(root=self.data_path,
-                                       train=False,
-                                       split="byclass",
-                                       transform=test_transform,
-                                       download=True)
-                dataset = train_dataset + test_dataset
-            
-        elif dataset in configs.SUPPORTED_IMAGE_DATASETS_ATTRIBUTE_INFERENCE:
-            from mlh.data_preprocessing.attribute_data_parser import CelebA
-            _loader = CelebA
-            train_dataset = _loader(root=self.data_path,
-                                    train=True,
-                                    transform=train_transform,
-                                    download=True)
-            test_dataset = _loader(root=self.data_path,
-                                   train=False,
-                                   transform=test_transform,
-                                   download=True)
-            dataset = train_dataset + test_dataset
-
-        else:
-            raise ValueError("Dataset Not Supported: ", dataset)
-        return dataset'''
+        # self.input_shape = args.input_shape
 
     def parse_dataset(self, dataset, train_transform, test_transform):
 
@@ -86,13 +36,13 @@ class GetDataLoader(object):
                 train_dataset = torchvision.datasets.ImageFolder(train_dir, transform=train_transform)
                 val_dataset = torchvision.datasets.ImageFolder(val_dir, transform=train_transform)
                 test_dataset = torchvision.datasets.ImageFolder(test_dir, transform=test_transform)
-                dataset = train_dataset+val_dataset+test_dataset
+                dataset = train_dataset +val_dataset +test_dataset
             elif dataset =='ImageNet':
                 train_dir = os.path.join(self.data_path, 'train')
                 val_dir = os.path.join(self.data_path, 'val')
                 train_dataset = torchvision.datasets.ImageFolder(train_dir, transform=train_transform)
                 val_dataset = torchvision.datasets.ImageFolder(val_dir, transform=train_transform)
-                dataset = train_dataset+val_dataset
+                dataset = train_dataset +val_dataset
             elif dataset =='EMNIST':
                 _loader = getattr(datasets, dataset)
                 train_dataset = _loader(root=self.data_path,
@@ -121,27 +71,25 @@ class GetDataLoader(object):
         else:
             raise ValueError("Dataset Not Supported: ", dataset)
         return dataset
-    def get_data_transform(self, dataset, use_transform="simple"):
-        # transform_list = [transforms.Resize(
-        #     (self.input_shape[0], self.input_shape[0])), ]
+    def get_data_transform(self, dataset):
 
-        transform_list = [transforms.Resize(
-            (224,224)), ]
+        if dataset in ['CIFAR10','CINIC10','CIFAR100'] :
+            train_transform = transforms.Compose([
+                transforms.RandomCrop(32, padding=4),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(**NORMALIZE_DICT[dataset]),
+            ])
 
-        if use_transform == "simple":
-            transform_list += [transforms.RandomCrop(
-                224, padding=4), transforms.RandomHorizontalFlip(), ]
+            val_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(**NORMALIZE_DICT[dataset]),
+            ])
+            print('data transformed')
+        else:
+            raise NotImplementedError
 
-            print("add simple data augmentation!")
-
-        transform_list.append(transforms.ToTensor())
-
-        if dataset in ["MNIST", "FashionMNIST", "EMNIST"]:
-            transform_list = [
-                transforms.Grayscale(3), ] + transform_list
-
-        transform_ = transforms.Compose(transform_list)
-        return transform_
+        return train_transform,val_transform
 
     def get_dataset(self, train_transform, test_transform):
         dataset = self.parse_dataset(
@@ -155,8 +103,7 @@ class GetDataLoader(object):
 
     def get_data_supervised(self, batch_size=128, num_workers=2):
 
-        train_transform = self.get_data_transform(self.args.dataset)
-        test_transform = self.get_data_transform(self.args.dataset)
+        train_transform,test_transform = self.get_data_transform(self.args.dataset)
 
         dataset = self.get_dataset(train_transform, test_transform)
 
