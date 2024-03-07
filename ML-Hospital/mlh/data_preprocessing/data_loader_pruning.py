@@ -11,6 +11,7 @@ from PIL import Image
 from mlh.data_preprocessing import configs
 import os
 
+
 torch.manual_seed(0)
 
 NORMALIZE_DICT = {
