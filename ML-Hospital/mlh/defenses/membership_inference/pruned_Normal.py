@@ -137,8 +137,7 @@ class TrainTargetNormal(Trainer):
             pruner=None,
             device=None,
     ):
-        if device is None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=lr,
@@ -180,7 +179,7 @@ class TrainTargetNormal(Trainer):
                     os.makedirs(self.log_path, exist_ok=True)
                     if self.args.mode == "prune":
                         if save_as is None:
-                            save_as = os.path.join(self.args.log_path,
+                            save_as = os.path.join(self.log_path,
                                                    "{}_{}_{}.pth".format(self.args.dataset, self.args.model,
                                                                          self.args.method))
 
@@ -190,13 +189,14 @@ class TrainTargetNormal(Trainer):
                             torch.save(model, save_as)
                     elif self.args.mode == "pretrain":
                         if save_as is None:
-                            save_as = os.path.join(self.args.log_path,
+                            save_as = os.path.join(self.log_path,
                                                    "{}_{}.pth".format(self.args.dataset, self.args.model))
                         torch.save(model.state_dict(), save_as)
                     best_acc = acc
                 scheduler.step()
         except KeyboardInterrupt:
             torch.save(model.state_dict(), save_as)
+            print('model saved successfully during exception!')
 
         self.args.logger.info("Best Acc=%.4f" % (best_acc))
 
@@ -204,12 +204,12 @@ class TrainTargetNormal(Trainer):
         if self.args.mode == "prune":
             prefix = 'global' if self.args.global_pruning else 'local'  # 全局或局部剪枝
             logger_name = "{}-{}-{}-{}".format(self.args.dataset, prefix, self.args.method, self.args.model)
-            self.args.log_path = os.path.join(self.args.log_path, self.args.dataset, self.args.mode, logger_name)
+            self.log_path = os.path.join(self.log_path, self.args.dataset, self.args.mode, logger_name)
             log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
         elif self.args.mode == "pretrain":
-            self.args.log_path = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
+            self.log_path = os.path.join(self.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
-            log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
+            log_file = "{}/{}.txt".format(self.log_path, logger_name)
         self.args.logger = utils.get_logger(logger_name, output=log_file)
 
         images, _ = next(iter(train_loader))
@@ -223,7 +223,7 @@ class TrainTargetNormal(Trainer):
             if self.args.sparsity_learning:
                 reg_pth = "reg_{}_{}_{}_{}.pth".format(self.args.dataset, self.args.model, self.args.method,
                                                        self.args.reg)
-                reg_pth = os.path.join(os.path.join(self.args.log_path, reg_pth))
+                reg_pth = os.path.join(os.path.join(self.log_path, reg_pth))
                 if not self.args.sl_restore:
                     self.args.logger.info("Regularizing...")
 
