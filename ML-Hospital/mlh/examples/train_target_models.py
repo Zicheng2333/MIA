@@ -84,7 +84,7 @@ if __name__ == "__main__":
     if opt.training_type == "Normal_f_vit_bt":
 
         total_evaluator = TrainTargetNormal(args=opt,
-            model=target_model,model_name=opt.model,device=opt.device,num_class=opt.num_class, epochs=opt.epochs, log_path=save_pth)
+            model=target_model,device=opt.device,num_class=opt.num_class, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train_pruned_model(train_loader, test_loader)
 
 

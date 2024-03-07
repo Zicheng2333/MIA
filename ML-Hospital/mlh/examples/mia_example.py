@@ -18,7 +18,7 @@ np.random.seed(0)
 torch.set_num_threads(1)
 
 from models import vit
-from models import resnet
+from models import resnet,resnet_tiny
 
 from mlh import utils
 
@@ -27,21 +27,18 @@ def get_target_model(name="vit_b_16", num_classes=1000,resume=False):
     if name == "vit_b_16":
         model = vit.VisionTransformer(num_classes=num_classes)
     elif name == 'resnet18':
-        model = resnet.ResNet18(num_classes=num_classes)
+        model = resnet.resnet18(num_classes=num_classes)
     elif name == 'resnet34':
-        model = resnet.ResNet34(num_classes=num_classes)
+        model = resnet.resnet34(num_classes=num_classes)
     elif name == 'resnet50':
-        model = resnet.ResNet50(num_classes=num_classes)
+        model = resnet.resnet50(num_classes=num_classes)
     elif name == 'resnet152':
-        model =resnet.ResNet152(num_classes=num_classes)
+        model =resnet.resnet152(num_classes=num_classes)
+    elif name == 'resnet56':
+        model = resnet_tiny.resnet56(num_classes=num_classes)
     else:
         raise ValueError("model not supported")
 
-
-    if resume:
-            print("resume!")   
-
-            
     return model
 
 
@@ -54,13 +51,13 @@ if __name__ == "__main__":
     target_model = get_target_model(name=args.model, num_classes=args.num_class)
     shadow_model = get_target_model(name=args.model, num_classes=args.num_class)
 
-    checkpoint1 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.model}.pth')
+    checkpoint1 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth')
     target_model.load_state_dict(checkpoint1)
     target_model = target_model.to(args.device)
     target_model = torch.nn.DataParallel(target_model)
 
 
-    checkpoint2 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.model}.pth')
+    checkpoint2 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth')
     shadow_model.load_state_dict(checkpoint2)
     shadow_model = shadow_model.to(args.device)
     shadow_model = torch.nn.DataParallel(shadow_model)

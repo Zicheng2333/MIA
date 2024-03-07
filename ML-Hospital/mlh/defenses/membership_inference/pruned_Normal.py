@@ -19,8 +19,7 @@ from mlh import utils
 
 class TrainTargetNormal(Trainer):
 
-    def __init__(self, args, model, model_name, device, num_class, epochs=100, learning_rate=0.01, momentum=0.9,
-                 weight_decay=5e-4, log_path="./"):
+    def __init__(self, args, model, device, num_class, epochs=100,  log_path="./"):
 
         super().__init__()
 
@@ -34,7 +33,6 @@ class TrainTargetNormal(Trainer):
         self.log_path = log_path
 
         self.args = args
-
 
     def get_pruner(self, model, example_inputs):
         self.args.sparsity_learning = False
