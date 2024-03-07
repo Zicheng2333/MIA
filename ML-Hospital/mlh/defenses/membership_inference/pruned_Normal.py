@@ -31,14 +31,7 @@ class TrainTargetNormal(Trainer):
 
         self.model = self.model.to(self.device)
 
-        self.optimizer = torch.optim.SGD(
-            self.model.parameters(), learning_rate, momentum, weight_decay)
-        self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            self.optimizer, T_max=self.epochs)
-
         self.log_path = log_path
-
-        self.model_name = model_name
 
         self.args = args
 
@@ -84,9 +77,9 @@ class TrainTargetNormal(Trainer):
         pruning_ratio_dict = {}
         # ignore output layers
         for m in model.modules():
-            if isinstance(m, torch.nn.Linear) and m.out_features == self.args.num_classes:
+            if isinstance(m, torch.nn.Linear) and m.out_features == self.num_classes:
                 ignored_layers.append(m)
-            elif isinstance(m, torch.nn.modules.conv._ConvNd) and m.out_channels == self.args.num_classes:
+            elif isinstance(m, torch.nn.modules.conv._ConvNd) and m.out_channels == self.num_classes:
                 ignored_layers.append(m)
 
         # Here we fix iterative_steps=200 to prune the model progressively with small steps
@@ -135,9 +128,9 @@ class TrainTargetNormal(Trainer):
             weight_decay=5e-4,
             save_state_dict_only=True,
             pruner=None,
-            device=None,
-    ):
 
+    ):
+        device = self.device
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=lr,
@@ -240,20 +233,20 @@ class TrainTargetNormal(Trainer):
                         save_as=reg_pth,
                     )
                 self.args.logger.info("Loading the sparse model from {}...".format(reg_pth))
-                self.model.load_state_dict(torch.load(reg_pth, map_location=self.args.device))
+                self.model.load_state_dict(torch.load(reg_pth, map_location=self.device))
 
             print("###################Start pruning###################")
             # TODO 1. Pruning
             self.model.eval()
             ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
-            ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.args.device)
+            ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.device)
             self.args.logger.info("Pruning...")
             self.progressive_pruning(pruner, self.model, speed_up=self.args.speed_up,
                                      example_inputs=self.example_inputs)
             del pruner  # remove reference
             self.args.logger.info(self.model)
             pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
-            pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.args.device)
+            pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.device)
 
             self.args.logger.info(
                 "Params: {:.2f} M => {:.2f} M ({:.2f}%)".format(
@@ -278,12 +271,11 @@ class TrainTargetNormal(Trainer):
             self.args.logger.info("Finetuning...")
             self.train(
                 self.model,
-                epochs=self.args.epochs,
+                epochs=self.epochs,
                 lr=self.args.lr,
                 lr_decay_milestones=self.args.lr_decay_milestones,
                 train_loader=train_loader,
                 test_loader=test_loader,
-                device=self.device,
                 save_state_dict_only=False,
             )
 
@@ -296,7 +288,7 @@ class TrainTargetNormal(Trainer):
             self.args.logger.info("ops: {:.2f} M".format(ops / 1e6))
             self.train(
                 model=self.model,
-                epochs=self.args.epochs,
+                epochs=self.epochs,
                 lr=self.args.lr,
                 lr_decay_milestones=self.args.lr_decay_milestones,
                 train_loader=train_loader,
