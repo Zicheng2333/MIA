@@ -274,7 +274,7 @@ class TrainTargetNormal(Trainer):
             self.args.logger.info("Finetuning...")
             self.train(
                 self.model,
-                epochs=self.args.total_epochs,
+                epochs=self.args.epochs,
                 lr=self.args.lr,
                 lr_decay_milestones=self.args.lr_decay_milestones,
                 train_loader=train_loader,
@@ -292,7 +292,7 @@ class TrainTargetNormal(Trainer):
             self.args.logger.info("ops: {:.2f} M".format(ops / 1e6))
             self.train(
                 model=self.model,
-                epochs=self.args.total_epochs,
+                epochs=self.args.epochs,
                 lr=self.args.lr,
                 lr_decay_milestones=self.args.lr_decay_milestones,
                 train_loader=train_loader,
