@@ -171,7 +171,7 @@ class TrainTargetNormal(Trainer):
                 # print(pruner.group_reg[pruner._groups[0]])
 
             model.eval()
-            acc, val_loss = self.eval(model, test_loader, self.device)
+            acc, val_loss = self.eval(test_loader)
             self.args.logger.info(
                 "Epoch {:d}/{:d}, Acc={:.4f}, Val Loss={:.4f}, lr={:.4f}".format(
                     epoch, epochs, acc, val_loss, optimizer.param_groups[0]["lr"]
