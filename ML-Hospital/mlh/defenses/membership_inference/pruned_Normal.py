@@ -36,8 +36,6 @@ class TrainTargetNormal(Trainer):
         self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=self.epochs)
 
-        self.criterion = nn.CrossEntropyLoss()
-
         self.log_path = log_path
 
         self.model_name = model_name
@@ -117,7 +115,7 @@ class TrainTargetNormal(Trainer):
             for i, (data, target) in enumerate(test_loader):
                 data, target = data.to(self.device), target.to(self.device)
                 out = self.model(data)
-                loss += self.criterion(out, target, reduction="sum")
+                loss += nn.functional.cross_entropy(out,target,reduction='sum')
                 pred = out.max(1)[1]
                 correct += (pred == target).sum()
                 total += len(target)
