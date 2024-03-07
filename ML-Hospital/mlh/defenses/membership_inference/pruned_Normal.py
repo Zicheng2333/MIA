@@ -14,6 +14,8 @@ import torch.nn.utils.prune
 import mlh.defenses.torch_pruning as tp
 from functools import partial
 
+import mlh.defenses.engine as engine
+
 
 class TrainTargetNormal(Trainer):
 
@@ -204,7 +206,7 @@ class TrainTargetNormal(Trainer):
             self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
             log_file = "{}/{}.txt".format(self.args.output_dir, logger_name)
-        self.args.logger = utils.get_logger(logger_name, output=log_file)
+        self.args.logger = engine.utils.get_logger(logger_name, output=log_file)
 
         images, _ = next(iter(train_loader))
         example_input = images[0].unsqueeze(0).to(self.device)
