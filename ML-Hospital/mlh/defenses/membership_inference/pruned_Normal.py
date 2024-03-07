@@ -151,59 +151,65 @@ class TrainTargetNormal(Trainer):
         )
         model.to(device)
         best_acc = -1
-        for epoch in range(epochs):
-            model.train()
+        try:
+            for epoch in range(epochs):
+                model.train()
 
-            for i, (data, target) in enumerate(train_loader):
-                data, target = data.to(device), target.to(device)
-                optimizer.zero_grad()
-                out = model(data)
-                loss = F.cross_entropy(out, target)
-                loss.backward()
-                if pruner is not None:
-                    pruner.regularize(model)  # for sparsity learning
-                optimizer.step()
+                for i, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    out = model(data)
+                    loss = F.cross_entropy(out, target)
+                    loss.backward()
+                    if pruner is not None:
+                        pruner.regularize(model)  # for sparsity learning
+                    optimizer.step()
 
-            if pruner is not None and isinstance(pruner, tp.pruner.GrowingRegPruner):
-                pruner.update_reg()  # increase the strength of regularization
-                # print(pruner.group_reg[pruner._groups[0]])
+                if pruner is not None and isinstance(pruner, tp.pruner.GrowingRegPruner):
+                    pruner.update_reg()  # increase the strength of regularization
+                    # print(pruner.group_reg[pruner._groups[0]])
 
-            model.eval()
-            acc, val_loss = self.eval(test_loader)
-            self.args.logger.info(
-                "Epoch {:d}/{:d}, Acc={:.4f}, Val Loss={:.4f}, lr={:.4f}".format(
-                    epoch, epochs, acc, val_loss, optimizer.param_groups[0]["lr"]
+                model.eval()
+                acc, val_loss = self.eval(test_loader)
+                self.args.logger.info(
+                    "Epoch {:d}/{:d}, Acc={:.4f}, Val Loss={:.4f}, lr={:.4f}".format(
+                        epoch, epochs, acc, val_loss, optimizer.param_groups[0]["lr"]
+                    )
                 )
-            )
-            if best_acc < acc:
-                os.makedirs(self.args.output_dir, exist_ok=True)
-                if self.args.mode == "prune":
-                    if save_as is None:
-                        save_as = os.path.join(self.args.output_dir,
-                                               "{}_{}_{}.pth".format(self.args.dataset, self.args.model, self.args.method))
+                if best_acc < acc:
+                    os.makedirs(self.log_path, exist_ok=True)
+                    if self.args.mode == "prune":
+                        if save_as is None:
+                            save_as = os.path.join(self.args.log_path,
+                                                   "{}_{}_{}.pth".format(self.args.dataset, self.args.model,
+                                                                         self.args.method))
 
-                    if save_state_dict_only:
+                        if save_state_dict_only:
+                            torch.save(model.state_dict(), save_as)
+                        else:
+                            torch.save(model, save_as)
+                    elif self.args.mode == "pretrain":
+                        if save_as is None:
+                            save_as = os.path.join(self.args.log_path,
+                                                   "{}_{}.pth".format(self.args.dataset, self.args.model))
                         torch.save(model.state_dict(), save_as)
-                    else:
-                        torch.save(model, save_as)
-                elif self.args.mode == "pretrain":
-                    if save_as is None:
-                        save_as = os.path.join(self.args.output_dir, "{}_{}.pth".format(self.args.dataset, self.args.model))
-                    torch.save(model.state_dict(), save_as)
-                best_acc = acc
-            scheduler.step()
+                    best_acc = acc
+                scheduler.step()
+        except KeyboardInterrupt:
+            torch.save(model.state_dict(), save_as)
+
         self.args.logger.info("Best Acc=%.4f" % (best_acc))
 
     def train_pruned_model(self, train_loader, test_loader):
         if self.args.mode == "prune":
             prefix = 'global' if self.args.global_pruning else 'local'  # 全局或局部剪枝
             logger_name = "{}-{}-{}-{}".format(self.args.dataset, prefix, self.args.method, self.args.model)
-            self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode, logger_name)
+            self.args.log_path = os.path.join(self.args.log_path, self.args.dataset, self.args.mode, logger_name)
             log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
         elif self.args.mode == "pretrain":
-            self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
+            self.args.log_path = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
-            log_file = "{}/{}.txt".format(self.args.output_dir, logger_name)
+            log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
         self.args.logger = utils.get_logger(logger_name, output=log_file)
 
         images, _ = next(iter(train_loader))
