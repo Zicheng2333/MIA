@@ -7,16 +7,12 @@ sys.path.append("..")
 sys.path.append("../..")
 
 from mlh.attacks.membership_inference.attacks import AttackDataset, BlackBoxMIA, MetricBasedMIA, LabelOnlyMIA
-from tqdm import tqdm
+
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
+
 from mlh.data_preprocessing.data_loader_vit import GetDataLoader
-from torchvision import datasets
-import torchvision.transforms as transforms
-import argparse
 import numpy as np
-import torch.optim as optim
+
 torch.manual_seed(0)
 np.random.seed(0)
 torch.set_num_threads(1)
@@ -62,13 +58,13 @@ if __name__ == "__main__":
     target_model.load_state_dict(checkpoint1)
     target_model = target_model.to(args.device)
     target_model = torch.nn.DataParallel(target_model)
-    print(target_model)
+
 
     checkpoint2 = torch.load(f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.model}.pth')
     shadow_model.load_state_dict(checkpoint2)
     shadow_model = shadow_model.to(args.device)
     shadow_model = torch.nn.DataParallel(shadow_model)
-    print(shadow_model)
+
 
     # load target/shadow model to conduct the attacks
 

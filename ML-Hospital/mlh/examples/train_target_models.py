@@ -12,7 +12,9 @@ from mlh.defenses.membership_inference.DPSGD import TrainTargetDP
 from mlh.defenses.membership_inference.LabelSmoothing import TrainTargetLabelSmoothing
 from mlh.defenses.membership_inference.MixupMMD import TrainTargetMixupMMD
 from mlh.defenses.membership_inference.PATE import TrainTargetPATE
-from mlh.defenses.membership_inference.Normal import TrainTargetNormal
+
+#from mlh.defenses.membership_inference.Normal import TrainTargetNormal
+from mlh.defenses.membership_inference.pruned_Normal import TrainTargetNormal
 
 import torch
 
@@ -67,7 +69,7 @@ if __name__ == "__main__":
         raise ValueError("opt.mode should be target or shadow")
 
     target_model = get_target_model(name=opt.model, num_classes=opt.num_class,resume=opt.resume)
-    print(target_model)
+
 
     save_pth = f'{opt.log_path}/{opt.dataset}/{opt.training_type}/{opt.mode}'
 

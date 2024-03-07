@@ -49,10 +49,30 @@ def parse_args():
     parser.add_argument('--log_path', type=str,
                         default='./save', help='')
 
+    #TODO For pruning
+    parser.add_argument("--method", type=str, default=None)
+    parser.add_argument("--speed-up", type=float, default=2)
+    parser.add_argument("--max-pruning-ratio", type=float, default=1.0)
+    parser.add_argument("--soft-keeping-ratio", type=float, default=0.0)
+    parser.add_argument("--reg", type=float, default=5e-4)
+    parser.add_argument("--delta_reg", type=float, default=1e-4, help='for growing regularization')
+    parser.add_argument("--weight-decay", type=float, default=5e-4)
+
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--global-pruning", action="store_true", default=False)
+    parser.add_argument("--sl-total-epochs", type=int, default=100, help="epochs for sparsity learning")
+    parser.add_argument("--sl-lr", default=0.01, type=float, help="learning rate for sparsity learning")
+    parser.add_argument("--sl-lr-decay-milestones", default="60,80", type=str, help="milestones for sparsity learning")
+    parser.add_argument("--sl-reg-warmup", type=int, default=0, help="epochs for sparsity learning")
+    parser.add_argument("--sl-restore", type=str, default=None)
+    parser.add_argument("--iterative-steps", default=400, type=int)
+
     args = parser.parse_args()
 
     #args.input_shape = [int(item) for item in args.input_shape.split(',')]
     args.device = 'cuda:%d' % args.gpu if torch.cuda.is_available() else 'cpu'
+
+
 
     return args
 
