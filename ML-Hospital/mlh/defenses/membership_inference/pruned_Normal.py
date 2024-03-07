@@ -204,7 +204,8 @@ class TrainTargetNormal(Trainer):
             self.args.output_dir = os.path.join(self.args.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
             log_file = "{}/{}.txt".format(self.args.output_dir, logger_name)
-        print("###################Start pruning###################")
+        self.args.logger = utils.get_logger(logger_name, output=log_file)
+
         images, _ = next(iter(train_loader))
         example_input = images[0].unsqueeze(0).to(self.device)
 
@@ -281,6 +282,7 @@ class TrainTargetNormal(Trainer):
             )
 
         elif self.args.mode == 'pretrain':
+            print("###################Start pretraining###################")
             ops, params = tp.utils.count_ops_and_params(
                 self.model, example_inputs=example_input,
             )
