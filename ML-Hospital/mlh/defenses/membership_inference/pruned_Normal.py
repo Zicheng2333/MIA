@@ -233,14 +233,14 @@ class TrainTargetNormal(Trainer):
             print("###################Start pruning###################")
             # TODO 1. Pruning
             self.model.eval()
-            ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
+            ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
             ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.device)
             self.args.logger.info("Pruning...")
             self.progressive_pruning(pruner, self.model, speed_up=self.args.speed_up,
-                                     example_inputs=self.example_inputs)
+                                     example_inputs=example_input)
             del pruner  # remove reference
             self.args.logger.info(self.model)
-            pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=self.example_inputs)
+            pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
             pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.device)
 
             self.args.logger.info(
