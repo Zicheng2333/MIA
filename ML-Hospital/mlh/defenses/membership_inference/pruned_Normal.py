@@ -36,6 +36,7 @@ class TrainTargetNormal(Trainer):
 
     def progressive_pruning(pruner, model, speed_up, example_inputs):
         model.eval()
+        print(1)
         base_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
         current_speed_up = 1
         while current_speed_up < speed_up:
@@ -250,7 +251,7 @@ class TrainTargetNormal(Trainer):
             ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
             ori_acc, ori_val_loss = self.eval(test_loader)
             self.args.logger.info("Pruning...")
-            self.progressive_pruning(pruner=pruner, model=self.model, speed_up=self.args.speed_up, example_inputs=example_input)
+            self.progressive_pruning(pruner, self.model, self.args.speed_up)
             del pruner  # remove reference
             self.args.logger.info(self.model)
             pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
