@@ -10,7 +10,7 @@ from mlh.attacks.membership_inference.attacks import AttackDataset, BlackBoxMIA,
 
 import torch
 
-from mlh.data_preprocessing.data_loader_vit import GetDataLoader
+from mlh.data_preprocessing.data_loader_pruning import GetDataLoader
 import numpy as np
 
 torch.manual_seed(0)
