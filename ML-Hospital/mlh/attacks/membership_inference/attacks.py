@@ -560,12 +560,12 @@ class BlackBoxMIA(MembershipInferenceAttack):
             pred_posteriors = []
             for inputs, targets, original_labels in dataloader:
                 self.optimizer.zero_grad()
-                print(inputs.shape)
-                print(targets.shape)
+                #print(inputs.shape)
+                #print(targets.shape)
                 inputs, targets = inputs.to(
                     self.device), targets.to(self.device)
                 outputs = self.attack_model(inputs)
-                print(outputs.shape)
+                #print(outputs.shape)
                 posteriors = F.softmax(outputs, dim=1)
                 loss = self.criterion(outputs, targets)
                 loss.backward()
