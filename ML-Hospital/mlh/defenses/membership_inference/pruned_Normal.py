@@ -206,7 +206,7 @@ class TrainTargetNormal(Trainer):
             prefix = 'global' if self.args.global_pruning else 'local'  # 全局或局部剪枝
             logger_name = "{}-{}-{}-{}".format(self.args.dataset, prefix, self.args.method, self.args.model)
             self.log_path = os.path.join(self.log_path, self.args.dataset, self.args.mode, logger_name)
-            log_file = "{}/{}.txt".format(self.args.log_path, logger_name)
+            log_file = "{}/{}.txt".format(self.log_path, logger_name)
         elif self.args.mode == "pretrain":
             self.log_path = os.path.join(self.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
