@@ -48,6 +48,8 @@ if __name__ == "__main__":
     s = GetDataLoader(args)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
+    target_path = f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth'
+    shadow_path = f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth'
 
     if args.mode == 'prune':
         # 加载目标模型
@@ -66,17 +68,20 @@ if __name__ == "__main__":
         target_model = get_target_model(name=args.model, num_classes=args.num_class)
         shadow_model = get_target_model(name=args.model, num_classes=args.num_class)
 
+
         checkpoint1 = torch.load(
             f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth')
         target_model.load_state_dict(checkpoint1)
         target_model = target_model.to(args.device)
         target_model = torch.nn.DataParallel(target_model)
+        print("target model loaded from {restore}!".format(restore=target_path))
 
         checkpoint2 = torch.load(
             f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth')
         shadow_model.load_state_dict(checkpoint2)
         shadow_model = shadow_model.to(args.device)
         shadow_model = torch.nn.DataParallel(shadow_model)
+        print("shadow model loaded from {restore}!".format(restore=shadow_path))
 
     # load target/shadow model to conduct the attacks
 
