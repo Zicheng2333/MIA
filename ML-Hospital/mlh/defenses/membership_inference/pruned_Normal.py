@@ -75,9 +75,9 @@ class TrainTargetNormal(Trainer):
         pruning_ratio_dict = {}
         # ignore output layers
         for m in model.modules():
-            if isinstance(m, torch.nn.Linear) and m.out_features == self.num_classes:
+            if isinstance(m, torch.nn.Linear) and m.out_features == self.num_class:
                 ignored_layers.append(m)
-            elif isinstance(m, torch.nn.modules.conv._ConvNd) and m.out_channels == self.num_classes:
+            elif isinstance(m, torch.nn.modules.conv._ConvNd) and m.out_channels == self.num_class:
                 ignored_layers.append(m)
 
         # Here we fix iterative_steps=200 to prune the model progressively with small steps
