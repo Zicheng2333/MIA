@@ -9,7 +9,7 @@ import torch
 def parse_args():
     parser = argparse.ArgumentParser('argument for training')
 
-    parser.add_argument('--batch_size', type=int, default=256,
+    parser.add_argument('--batch_size', type=int, default=128,
                         help='batch_size')
     parser.add_argument('--num_workers', type=int, default=10,
                         help='num of workers to use')
