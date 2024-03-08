@@ -55,13 +55,13 @@ if __name__ == "__main__":
         print('pruned MIA!')
         # 加载目标模型
         checkpoint1 = torch.load(
-            f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}-global-{args.method}-{args.model}/{args.mode}/{args.dataset}_{args.model}_{args.method}.pth')
+            f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}-global-{args.method}-{args.model}/{args.dataset}_{args.model}_{args.method}.pth')
         target_model = checkpoint1.to(args.device)
         target_model = torch.nn.DataParallel(target_model)
 
         # 加载影子模型
         checkpoint2 = torch.load(
-            f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}-global-{args.method}-{args.model}/{args.mode}/{args.dataset}_{args.model}_{args.method}.pth')
+            f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}-global-{args.method}-{args.model}/{args.dataset}_{args.model}_{args.method}.pth')
         shadow_model = checkpoint2.to(args.device)
         shadow_model = torch.nn.DataParallel(shadow_model)
 
