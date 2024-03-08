@@ -52,6 +52,7 @@ if __name__ == "__main__":
     shadow_path = f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth'
 
     if args.mode == 'prune':
+        print('pruned MIA!')
         # 加载目标模型
         checkpoint1 = torch.load(
             f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth')
@@ -64,7 +65,8 @@ if __name__ == "__main__":
         shadow_model = checkpoint2.to(args.device)
         shadow_model = torch.nn.DataParallel(shadow_model)
 
-    elif args.mode == 'finetune':
+    elif args.mode == 'pretrain':
+        print('pretrained MIA!')
         target_model = get_target_model(name=args.model, num_classes=args.num_class)
         shadow_model = get_target_model(name=args.model, num_classes=args.num_class)
 
