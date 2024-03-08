@@ -34,6 +34,19 @@ class TrainTargetNormal(Trainer):
 
         self.args = args
 
+    def progressive_pruning(pruner, model, speed_up, example_inputs):
+        model.eval()
+        base_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
+        current_speed_up = 1
+        while current_speed_up < speed_up:
+            pruner.step(interactive=False)
+            pruned_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
+            current_speed_up = float(base_ops) / pruned_ops
+            if pruner.current_step == pruner.iterative_steps:
+                break
+            # print(current_speed_up)
+        return current_speed_up
+
     def get_pruner(self, model, example_inputs):
         self.args.sparsity_learning = False
         if self.args.method == "random":
