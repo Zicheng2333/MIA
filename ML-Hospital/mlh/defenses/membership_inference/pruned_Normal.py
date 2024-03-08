@@ -207,8 +207,9 @@ class TrainTargetNormal(Trainer):
             pruner = self.get_pruner(self.model, example_inputs=example_input)
 
             # TODO 0. Sparsity Learning
-            print("###################Start sparsity learning###################")
+
             if self.args.sparsity_learning:
+                print("###################Start sparsity learning###################")
                 reg_pth = "reg_{}_{}_{}_{}.pth".format(self.args.dataset, self.args.model, self.args.method,
                                                        self.args.reg)
                 reg_pth = os.path.join(os.path.join(self.log_path, reg_pth))
@@ -234,14 +235,14 @@ class TrainTargetNormal(Trainer):
             # TODO 1. Pruning
             self.model.eval()
             ori_ops, ori_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
-            ori_acc, ori_val_loss = eval(self.model, test_loader, device=self.device)
+            ori_acc, ori_val_loss = self.eval(test_loader)
             self.args.logger.info("Pruning...")
             self.progressive_pruning(pruner, self.model, speed_up=self.args.speed_up,
                                      example_inputs=example_input)
             del pruner  # remove reference
             self.args.logger.info(self.model)
             pruned_ops, pruned_size = tp.utils.count_ops_and_params(self.model, example_inputs=example_input)
-            pruned_acc, pruned_val_loss = eval(self.model, test_loader, device=self.device)
+            pruned_acc, pruned_val_loss = self.eval(test_loader)
 
             self.args.logger.info(
                 "Params: {:.2f} M => {:.2f} M ({:.2f}%)".format(
