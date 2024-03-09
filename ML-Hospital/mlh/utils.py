@@ -53,7 +53,7 @@ def parse_args():
 
 
     #TODO Basic options
-    parser.add_argument("--mode", type=str, required=True, choices=["pretrain", "prune", "test"])
+    parser.add_argument("--mode", type=str, required=True, choices=["pretrain", "prune", "eval"])
 
     parser.add_argument("--lr-decay-milestones", default="60,80", type=str, help="milestones for learning rate decay")
     parser.add_argument("--lr-decay-gamma", default=0.1, type=float)
