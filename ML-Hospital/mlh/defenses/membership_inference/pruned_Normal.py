@@ -309,8 +309,8 @@ class TrainTargetNormal(Trainer):
             )
             print("Params: {:.2f} M".format(params / 1e6))
             print("ops: {:.2f} M".format(ops / 1e6))
-            val_acc, val_loss = eval(self.model, test_loader)
-            train_acc, train_loss = eval(self.model,train_loader)
+            val_acc, val_loss = self.eval(test_loader)
+            train_acc, train_loss = self.eval(train_loader)
 
             print("Train Acc: {:.4f} Train Loss: {:.4f} Val Acc: {:.4f} Val Loss: {:.4f}\n".format(train_acc, train_loss, val_acc, val_loss))
 
