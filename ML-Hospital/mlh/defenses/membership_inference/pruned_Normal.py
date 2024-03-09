@@ -211,9 +211,7 @@ class TrainTargetNormal(Trainer):
             self.log_path = os.path.join(self.log_path, self.args.dataset, self.args.mode)
             logger_name = "{}-{}".format(self.args.dataset, self.args.model)
             log_file = "{}/{}.txt".format(self.log_path, logger_name)
-        elif self.args.mode == "test":
-            log_file = None
-        self.args.logger = utils.get_logger(logger_name, output=log_file)
+
 
         images, _ = next(iter(train_loader))
         example_input = images[0].unsqueeze(0).to(self.device)
@@ -314,7 +312,7 @@ class TrainTargetNormal(Trainer):
             val_acc, val_loss = eval(self.model, test_loader)
             train_acc, train_loss = eval(self.model,train_loader)
 
-            self.args.logger.info("Train Acc: {:.4f} Train Loss: {:.4f} Val Acc: {:.4f} Val Loss: {:.4f}\n".format(train_acc, train_loss, val_acc, val_loss))
+            print("Train Acc: {:.4f} Train Loss: {:.4f} Val Acc: {:.4f} Val Loss: {:.4f}\n".format(train_acc, train_loss, val_acc, val_loss))
 
 
 
