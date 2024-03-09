@@ -307,8 +307,8 @@ class TrainTargetNormal(Trainer):
             ops, params = tp.utils.count_ops_and_params(
                 self.model, example_inputs=example_input,
             )
-            self.args.logger.info("Params: {:.2f} M".format(params / 1e6))
-            self.args.logger.info("ops: {:.2f} M".format(ops / 1e6))
+            print("Params: {:.2f} M".format(params / 1e6))
+            print("ops: {:.2f} M".format(ops / 1e6))
             val_acc, val_loss = eval(self.model, test_loader)
             train_acc, train_loss = eval(self.model,train_loader)
 
