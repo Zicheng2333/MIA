@@ -49,6 +49,8 @@ def get_target_model(name="vit_b_16", num_classes=1000,resume=False,load_path=''
         model =resnet.resnet152(num_classes=num_classes)
     elif name == 'resnet56':
         model = resnet_tiny.resnet56(num_classes=num_classes)
+    elif name == 'resnet8':
+        model = resnet_tiny.resnet8(num_classes=num_classes)
     else:
         raise ValueError("model not supported",name)
 
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     if opt.training_type == "Normal_f_vit_bt":
 
         total_evaluator = TrainTargetNormal(args=opt,
-            model=target_model,device=opt.device,num_class=opt.num_class, epochs=opt.epochs, log_path=save_pth)
+            model=target_model,device=opt.device,num_class=opt.num_class,val_loader = inference_loader, epochs=opt.epochs, log_path=save_pth)
         total_evaluator.train_pruned_model(train_loader, test_loader)
 
 

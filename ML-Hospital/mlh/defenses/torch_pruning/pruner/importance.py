@@ -1,4 +1,6 @@
 import abc
+from collections import namedtuple
+
 import torch
 import torch.nn as nn
 
@@ -24,9 +26,12 @@ __all__ = [
     "BNScaleImportance",
     "LAMPImportance",
     "RandomImportance",
+
+    'DeltaLossImportance',
+
 ]
 
-class Importance(abc.ABC):
+class Importance(abc.ABC): #abc.ABC：抽象基类
     """ Estimate the importance of a tp.Dependency.Group, and return an 1-D per-channel importance score.
 
         It should accept a group as inputs, and return a 1-D tensor with the same length as the number of channels.
@@ -613,3 +618,59 @@ class TaylorImportance(GroupTaylorImportance):
 
 class HessianImportance(GroupHessianImportance):
     pass
+
+
+_helpers = namedtuple('GroupItem', ['dep', 'idxs'])
+
+class DeltaLossImportance(Importance):
+    def __init__(self,model,val_loader,device):
+        self.model = model
+        self.val_loader = val_loader
+
+        self.device = device
+
+    def evaluate_loss(self, model):
+        """
+        在给定的数据加载器上评估模型的平均损失。
+        """
+        model.eval()  # 设置模型为评估模式
+        total_loss = 0.0
+        with torch.no_grad():  # 不计算梯度
+            for inputs, targets in self.val_loader:
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
+                outputs = model(inputs)
+                loss = nn.CrossEntropyLoss(outputs, targets)
+                total_loss += loss.item()
+        return total_loss
+
+    @torch.no_grad()
+    def compute_delta_loss(self, group):
+        """
+        计算给定参数组的DeltaLoss。
+        """
+        original_loss = self.evaluate_loss(self.model)  # 计算原始损失
+
+        delta_losses = []
+        for dep, idxs in group.items:  # 迭代每个依赖和索引
+            original_param_data = {}  # 存储原始参数数据
+
+            # 模拟剪枝操作：将参数置为零
+            for param in dep.target.parameters():
+                original_param_data[param] = param.data.clone()
+                param.data[idxs] = 0  # 假设idxs是可以直接用于索引参数的
+
+            new_loss = self.evaluate_loss(self.model)  # 计算剪枝后的损失
+            delta_loss = original_loss - new_loss   # 计算损失差
+            delta_losses.append(delta_loss)  # 存储损失差的绝对值
+
+            # 恢复原始参数数据
+            for param in dep.target.parameters():
+                param.data = original_param_data[param]
+
+        return torch.tensor(delta_losses)  # 返回所有参数组的DeltaLoss列表
+
+    def __call__(self, group:Group):
+        return self.compute_delta_loss(group)
+
+
+

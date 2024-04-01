@@ -15,11 +15,9 @@ import mlh.defenses.torch_pruning as tp
 from functools import partial
 
 
-from mlh import utils
-
 class TrainTargetNormal(Trainer):
 
-    def __init__(self, args, model, device, num_class, epochs=100,  log_path="./"):
+    def __init__(self, args, model, device, num_class,val_loader, epochs=100,  log_path="./"):
 
         super().__init__()
 
@@ -31,6 +29,7 @@ class TrainTargetNormal(Trainer):
         self.model = self.model.to(self.device)
 
         self.log_path = log_path
+        self.val_loader = val_loader
 
         self.args = args
 
@@ -38,7 +37,7 @@ class TrainTargetNormal(Trainer):
         model.eval()
         base_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
         current_speed_up = 1
-        while current_speed_up < speed_up:
+        while current_speed_up < speed_up: #计算模型速度提升与预期提升的比率
             pruner.step(interactive=False)
             pruned_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
             current_speed_up = float(base_ops) / pruned_ops
@@ -79,6 +78,11 @@ class TrainTargetNormal(Trainer):
             imp = tp.importance.GroupNormImportance(p=2)
             pruner_entry = partial(tp.pruner.GrowingRegPruner, reg=self.args.reg, delta_reg=self.args.delta_reg,
                                    global_pruning=self.args.global_pruning)
+
+        elif self.args.method == 'MIA':
+            imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device)
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
+
         else:
             raise NotImplementedError
 
@@ -186,7 +190,6 @@ class TrainTargetNormal(Trainer):
                         save_as = os.path.join(self.log_path,
                                                "{}_{}_{}.pth".format(self.args.dataset, self.args.model,
                                                                      self.args.method))
-
                     if save_state_dict_only:
                         torch.save(model.state_dict(), save_as)
                     else:
