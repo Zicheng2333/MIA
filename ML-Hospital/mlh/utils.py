@@ -42,7 +42,7 @@ def parse_args():
                         help='attack type: "black-box", "black-box-sorted", "black-box-top3", "metric-based", and "label-only"')
     parser.add_argument('--data_path', type=str, default='/mnt/sharedata/ssd/common/datasets',
                         help='data_path')
-    parser.add_argument('--load_path', type=str, default='/MIA',
+    parser.add_argument('--load_path', type=str, default='/data/home/xzc/ML-Hospital/MIA',
                         help='data_path')
     #parser.add_argument('--input-shape', type=str, default="256,256,3",
     #                    help='comma delimited input shape input')
