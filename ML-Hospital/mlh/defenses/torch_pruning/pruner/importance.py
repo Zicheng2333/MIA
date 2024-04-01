@@ -8,6 +8,8 @@ import typing
 from . import function
 from ..dependency import Group
 
+import tqdm
+
 __all__ = [
     # Base Class
     "Importance",
@@ -645,13 +647,14 @@ class DeltaLossImportance(Importance):
 
     @torch.no_grad()
     def compute_delta_loss(self, group):
+        print('computing importance score')
         """
         计算给定参数组的DeltaLoss。
         """
         original_loss = self.evaluate_loss(self.model)  # 计算原始损失
 
         delta_losses = []
-        for dep, idxs in group.items:  # 迭代每个依赖和索引
+        for dep, idxs in tqdm(group.items):  # 迭代每个依赖和索引
             original_param_data = {}  # 存储原始参数数据
 
             # 模拟剪枝操作：将参数置为零
