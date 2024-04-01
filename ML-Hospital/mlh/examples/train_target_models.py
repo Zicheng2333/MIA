@@ -56,7 +56,7 @@ def get_target_model(name="vit_b_16", num_classes=1000,resume=False,load_path=''
 
 
     if resume:
-        print('resume!')
+        print(resume)
         loaded = torch.load(load_path, map_location="cpu")
         if isinstance(loaded, nn.Module):
             model = loaded
