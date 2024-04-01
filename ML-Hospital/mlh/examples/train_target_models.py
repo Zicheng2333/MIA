@@ -73,8 +73,6 @@ if __name__ == "__main__":
     s = GetDataLoader(opt)
     target_train_loader, target_inference_loader, target_test_loader, shadow_train_loader, shadow_inference_loader, shadow_test_loader = s.get_data_supervised()
 
-    print(opt.resume)
-
     if opt.mia_mode == "target":
         train_loader, inference_loader, test_loader = target_train_loader, target_inference_loader, target_test_loader,
     elif opt.mia_mode == "shadow":
