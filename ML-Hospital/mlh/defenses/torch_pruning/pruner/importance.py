@@ -653,9 +653,10 @@ class DeltaLossImportance(Importance):
         importance_scores = []
 
         # 遍历Group中的每一项
-        for dep, idxs in group.items:
+        for dep, idxs in tqdm(group.items):
             # 备份原始参数以便恢复
             original_parameters = deepcopy(dep.target.module.state_dict())
+            print('params copied!')
 
             # 模拟剪枝
             group.prune(idxs=idxs, record_history=False)  # 使用指定的idxs执行剪枝
