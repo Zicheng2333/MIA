@@ -626,11 +626,13 @@ class HessianImportance(GroupHessianImportance):
 _helpers = namedtuple('GroupItem', ['dep', 'idxs'])
 
 class DeltaLossImportance(Importance):
-    def __init__(self,model,val_loader,device):
+    def __init__(self,model,val_loader,device,
+                 target_types: list = [nn.modules.conv._ConvNd, nn.Linear, nn.modules.batchnorm._BatchNorm, nn.LayerNorm]):
         self.model = model
         self.val_loader = val_loader
 
         self.device = device
+        self.target_types = target_types
 
     def _normalize(self, group_importance, normalizer):
         if normalizer is None:
