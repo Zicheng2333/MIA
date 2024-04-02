@@ -632,6 +632,66 @@ class DeltaLossImportance(Importance):
 
         self.device = device
 
+    def _normalize(self, group_importance, normalizer):
+        if normalizer is None:
+            return group_importance
+        elif isinstance(normalizer, typing.Callable):
+            return normalizer(group_importance)
+        elif normalizer == "sum":
+            return group_importance / group_importance.sum()
+        elif normalizer == "standarization":
+            return (group_importance - group_importance.min()) / (
+                        group_importance.max() - group_importance.min() + 1e-8)
+        elif normalizer == "mean":
+            return group_importance / group_importance.mean()
+        elif normalizer == "max":
+            return group_importance / group_importance.max()
+        elif normalizer == 'gaussian':
+            return (group_importance - group_importance.mean()) / (group_importance.std() + 1e-8)
+        elif normalizer.startswith(
+                'sentinel'):  # normalize the score with the k-th smallest element. e.g. sentinel_0.5 means median normalization
+            sentinel = float(normalizer.split('_')[1]) * len(group_importance)
+            sentinel = torch.argsort(group_importance, dim=0, descending=False)[int(sentinel)]
+            return group_importance / (group_importance[sentinel] + 1e-8)
+
+        else:
+            raise NotImplementedError
+
+    def _reduce(self, group_imp: typing.List[torch.Tensor], group_idxs: typing.List[typing.List[int]]):
+        if len(group_imp) == 0: return group_imp
+        if self.group_reduction == 'prod':
+            reduced_imp = torch.ones_like(group_imp[0])
+        elif self.group_reduction == 'max':
+            reduced_imp = torch.ones_like(group_imp[0]) * -99999
+        else:
+            reduced_imp = torch.zeros_like(group_imp[0])
+
+        for i, (imp, root_idxs) in enumerate(zip(group_imp, group_idxs)):
+            if self.group_reduction == "sum" or self.group_reduction == "mean":
+                reduced_imp.scatter_add_(0, torch.tensor(root_idxs, device=imp.device), imp)  # accumulated importance
+            elif self.group_reduction == "max":  # keep the max importance
+                selected_imp = torch.index_select(reduced_imp, 0, torch.tensor(root_idxs, device=imp.device))
+                selected_imp = torch.maximum(input=selected_imp, other=imp)
+                reduced_imp.scatter_(0, torch.tensor(root_idxs, device=imp.device), selected_imp)
+            elif self.group_reduction == "prod":  # product of importance
+                selected_imp = torch.index_select(reduced_imp, 0, torch.tensor(root_idxs, device=imp.device))
+                torch.mul(selected_imp, imp, out=selected_imp)
+                reduced_imp.scatter_(0, torch.tensor(root_idxs, device=imp.device), selected_imp)
+            elif self.group_reduction == 'first':
+                if i == 0:
+                    reduced_imp.scatter_(0, torch.tensor(root_idxs, device=imp.device), imp)
+            elif self.group_reduction == 'gate':
+                if i == len(group_imp) - 1:
+                    reduced_imp.scatter_(0, torch.tensor(root_idxs, device=imp.device), imp)
+            elif self.group_reduction is None:
+                reduced_imp = torch.stack(group_imp, dim=0)  # no reduction
+            else:
+                raise NotImplementedError
+
+        if self.group_reduction == "mean":
+            reduced_imp /= len(group_imp)
+        return reduced_imp
+
     def evaluate_loss(self, model):
         """
         在给定的数据加载器上评估模型的平均损失。
@@ -648,31 +708,55 @@ class DeltaLossImportance(Importance):
         return total_loss
 
     @torch.no_grad()
-    def evaluate_importance(self, group):
-        original_loss = self.evaluate_loss(self.model)  # 计算原始损失
-        importance_scores = []
+    def __call__(self, group: Group):
+        # 计算原始模型在验证集上的损失
+        original_loss = self.evaluate_loss(self.model)
 
-        # 遍历Group中的每一项
-        for dep, idxs in group.items:
-            # 备份原始参数以便恢复
-            original_parameters = deepcopy(dep.target.module.state_dict())
-            print('params copied!')
+        group_imp = []
+        group_idxs = []
+        # 遍历group中的每个依赖项和索引
+        for i, (dep, idxs) in enumerate(group):
+            layer = dep.layer
+            prune_fn = dep.pruning_fn
+            root_idxs = group[i].root_idxs
+            if not isinstance(layer, tuple(self.target_types)):
+                continue
+
+            # 备份原始参数
+            original_params = deepcopy(layer.state_dict())
 
             # 模拟剪枝
-            group.prune(idxs=idxs, record_history=False)  # 使用指定的idxs执行剪枝
-            pruned_loss = self.evaluate_loss(self.model)  # 计算剪枝后的损失
+            prune_fn(self, layer, idxs)  # 注意: 这假设prune_fn可以直接修改layer
+
+            # 计算剪枝后的模型在验证集上的损失
+            pruned_loss = self.evaluate_loss(self.model)
+
+            # 计算损失变化作为重要性分数
+            loss_change = original_loss-pruned_loss
+            group_imp.append(torch.tensor([loss_change], device=self.device))
+            group_idxs.append(root_idxs)
 
             # 恢复原始参数
-            dep.target.module.load_state_dict(original_parameters)
+            layer.load_state_dict(original_params)
 
-            # 计算重要性分数
-            loss_change = pruned_loss - original_loss
-            importance_scores.append(loss_change)
+        if len(group_imp) == 0:  # 如果没有参数化层，跳过
+            return None
 
-        return importance_scores
+        # 将所有的重要性分数合并为一个张量
+        group_imp_tensor = torch.cat(group_imp)
 
-    def __call__(self, group:Group):
-        return self.evaluate_importance(group)
+        # 规约操作：这里我们采用简单的方法，例如，取最大值或平均值
+        # 注意：具体的规约策略需要根据你的应用场景来定
+        reduced_imp = group_imp_tensor.max()  # 作为示例，这里仅取最大损失变化
+
+        # 标准化操作：将重要性分数标准化到[0, 1]区间
+        # 注意：当所有分数相同时，会导致分母为0的情况，这需要特别处理
+        if group_imp_tensor.std() > 0:
+            normalized_imp = (reduced_imp - group_imp_tensor.mean()) / group_imp_tensor.std()
+        else:
+            normalized_imp = torch.tensor([0.], device=self.device)  # 所有分数相同时的特殊处理
+
+        return normalized_imp
 
 
 
