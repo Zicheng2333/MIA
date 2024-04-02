@@ -319,6 +319,7 @@ class RandomImportance(Importance):
     @torch.no_grad()
     def __call__(self, group, **kwargs):
         _, idxs = group[0]
+        print(idxs)
         return torch.rand(len(idxs))
 
 
