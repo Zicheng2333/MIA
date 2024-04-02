@@ -642,37 +642,12 @@ class DeltaLossImportance(Importance):
             for inputs, targets in self.val_loader:
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = model(inputs)
-                loss = nn.CrossEntropyLoss(outputs, targets)
+                criterion = nn.CrossEntropyLoss()
+                loss = criterion(outputs, targets)
                 total_loss += loss.item()
         return total_loss
 
     @torch.no_grad()
-    def compute_delta_loss(self, group):
-        print('computing importance score')
-        """
-        计算给定参数组的DeltaLoss。
-        """
-        original_loss = self.evaluate_loss(self.model)  # 计算原始损失
-
-        delta_losses = []
-        for dep, idxs in tqdm(group.items):  # 迭代每个依赖和索引
-            original_param_data = {}  # 存储原始参数数据
-
-            # 模拟剪枝操作：将参数置为零
-            for param in dep.target.parameters():
-                original_param_data[param] = param.data.clone()
-                param.data[idxs] = 0  # 假设idxs是可以直接用于索引参数的
-
-            new_loss = self.evaluate_loss(self.model)  # 计算剪枝后的损失
-            delta_loss = original_loss - new_loss   # 计算损失差
-            delta_losses.append(delta_loss)  # 存储损失差的绝对值
-
-            # 恢复原始参数数据
-            for param in dep.target.parameters():
-                param.data = original_param_data[param]
-
-        return torch.tensor(delta_losses)  # 返回所有参数组的DeltaLoss列表
-
     def evaluate_importance(self, group):
         original_loss = self.evaluate_loss(self.model)  # 计算原始损失
         importance_scores = []
