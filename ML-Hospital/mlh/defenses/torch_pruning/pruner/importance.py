@@ -728,7 +728,7 @@ class DeltaLossImportance(Importance):
             original_params = deepcopy(layer.state_dict())
 
             # 模拟剪枝
-            prune_fn(self, layer, idxs)  # 注意: 这假设prune_fn可以直接修改layer
+            prune_fn( layer, idxs)  # 注意: 这假设prune_fn可以直接修改layer
 
             # 计算剪枝后的模型在验证集上的损失
             pruned_loss = self.evaluate_loss(self.model)
