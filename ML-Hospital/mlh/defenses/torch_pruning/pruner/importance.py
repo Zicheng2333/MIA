@@ -9,6 +9,7 @@ from . import function
 from ..dependency import Group
 
 import tqdm
+from copy import deepcopy
 
 __all__ = [
     # Base Class
@@ -672,8 +673,30 @@ class DeltaLossImportance(Importance):
 
         return torch.tensor(delta_losses)  # 返回所有参数组的DeltaLoss列表
 
+    def evaluate_importance(self, group):
+        original_loss = self.evaluate_loss(self.model)  # 计算原始损失
+        importance_scores = []
+
+        # 遍历Group中的每一项
+        for dep, idxs in group.items:
+            # 备份原始参数以便恢复
+            original_parameters = deepcopy(dep.target.module.state_dict())
+
+            # 模拟剪枝
+            group.prune(idxs=idxs, record_history=False)  # 使用指定的idxs执行剪枝
+            pruned_loss = self.evaluate_loss(self.model)  # 计算剪枝后的损失
+
+            # 恢复原始参数
+            dep.target.module.load_state_dict(original_parameters)
+
+            # 计算重要性分数
+            loss_change = pruned_loss - original_loss
+            importance_scores.append(loss_change)
+
+        return importance_scores
+
     def __call__(self, group:Group):
-        return self.compute_delta_loss(group)
+        return self.evaluate_importance(group)
 
 
 

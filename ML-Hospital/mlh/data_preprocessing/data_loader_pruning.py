@@ -57,6 +57,7 @@ class GetDataLoader(object):
                                        transform=test_transform,
                                        download=False)
                 dataset = train_dataset + test_dataset
+
             else:
                 _loader = getattr(datasets, dataset)
                 train_dataset = _loader(root=self.data_path,
