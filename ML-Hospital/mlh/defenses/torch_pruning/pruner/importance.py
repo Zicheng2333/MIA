@@ -728,8 +728,9 @@ class DeltaLossImportance(Importance):
 
             for idx in idxs:
                 original_param = layer.weight.data[idx]
+                print('original param:', original_param)
                 layer.weight.data[idx] = 0
-                print('original param:',original_param)
+
                 pruned_loss = self.evaluate_loss(self.model)
 
                 # 计算损失变化作为重要性分数
