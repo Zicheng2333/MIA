@@ -742,8 +742,8 @@ class DeltaLossImportance(Importance):
                     group_idxs.append(root_idxs)
 
                     # 恢复原始参数
-                    # print('idx:',idx)
-                    # print('weight:',layer.weight.data)
+                    print('idx:',idx)
+                    print('weight:',layer.weight.data)
                     layer.weight.data[idx] = original_param
 
 
