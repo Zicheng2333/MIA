@@ -321,7 +321,7 @@ class RandomImportance(Importance):
     def __call__(self, group, **kwargs):
         _, idxs = group[0]
         re = torch.rand(len(idxs))
-        print(re)
+
         return re
 
 
@@ -734,38 +734,33 @@ class DeltaLossImportance(Importance):
             print(self.model)
             print(layer)
             print(idxs)
-            prune_fn(layer, idxs)  # 注意: 这假设prune_fn可以直接修改layer
+            for i in idxs:
+                idx = []
+                idx.append(i)
 
-            # 计算剪枝后的模型在验证集上的损失
-            print(self.model)
-            pruned_loss = self.evaluate_loss(self.model)
+                prune_fn(layer, idx)
 
-            # 计算损失变化作为重要性分数
-            loss_change = original_loss-pruned_loss
-            group_imp.append(torch.tensor([loss_change], device=self.device))
-            group_idxs.append(root_idxs)
+                # 计算剪枝后的模型在验证集上的损失
+                print(self.model)
+                pruned_loss = self.evaluate_loss(self.model)
 
-            # 恢复原始参数
-            layer.load_state_dict(original_params)
+                # 计算损失变化作为重要性分数
+                loss_change = original_loss-pruned_loss
+                group_imp.append(torch.tensor([loss_change], device=self.device))
+                group_idxs.append(root_idxs)
 
-        if len(group_imp) == 0:  # 如果没有参数化层，跳过
+                # 恢复原始参数
+                layer.load_state_dict(original_params)
+
+
+        if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
-        # 将所有的重要性分数合并为一个张量
-        group_imp_tensor = torch.cat(group_imp)
+        group_imp = self._reduce(group_imp,group_idxs)
+        group_imp = self._normalize(group_imp,'mean')
 
-        # 规约操作：这里我们采用简单的方法，例如，取最大值或平均值
-        # 注意：具体的规约策略需要根据你的应用场景来定
-        reduced_imp = group_imp_tensor.max()  # 作为示例，这里仅取最大损失变化
 
-        # 标准化操作：将重要性分数标准化到[0, 1]区间
-        # 注意：当所有分数相同时，会导致分母为0的情况，这需要特别处理
-        if group_imp_tensor.std() > 0:
-            normalized_imp = (reduced_imp - group_imp_tensor.mean()) / group_imp_tensor.std()
-        else:
-            normalized_imp = torch.tensor([0.], device=self.device)  # 所有分数相同时的特殊处理
-
-        return normalized_imp
+        return group_imp
 
 
 
