@@ -729,6 +729,7 @@ class DeltaLossImportance(Importance):
             for idx in idxs:
                 original_param = layer.weight.data[idx]
                 layer.weight.data[idx] = 0
+                print('original param:',original_param)
                 pruned_loss = self.evaluate_loss(self.model)
 
                 # 计算损失变化作为重要性分数
@@ -737,8 +738,8 @@ class DeltaLossImportance(Importance):
                 group_idxs.append(root_idxs)
 
                 # 恢复原始参数
-                print('idx:',idx)
-                print('weight:',layer.weight.data)
+                #print('idx:',idx)
+                #print('weight:',layer.weight.data)
                 layer.weight.data[idx] = original_param
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
