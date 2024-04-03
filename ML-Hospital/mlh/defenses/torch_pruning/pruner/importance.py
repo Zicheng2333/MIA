@@ -733,7 +733,8 @@ class DeltaLossImportance(Importance):
                     original_param = layer.weight.data[idx].clone()
                     layer.weight.data[idx] = 0
 
-                    pruned_loss = self.evaluate_loss(self.model)
+                    #pruned_loss = self.evaluate_loss(self.model)
+                    pruned_loss = 0
 
                     # 计算损失变化作为重要性分数
                     loss_change = original_loss - pruned_loss
@@ -748,6 +749,8 @@ class DeltaLossImportance(Importance):
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
+
+        print(group_imp)
         group_imp = torch.stack(group_imp)
         group_idxs = torch.tensor(group_idxs).flatten()
         group_imp = self._reduce(group_imp,group_idxs)
