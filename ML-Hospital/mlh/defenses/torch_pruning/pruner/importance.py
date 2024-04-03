@@ -721,7 +721,6 @@ class DeltaLossImportance(Importance):
         # 遍历group中的每个依赖项和索引
         for i, (dep, idxs) in enumerate(group):
             layer = dep.layer
-            prune_fn = dep.pruning_fn
             root_idxs = group[i].root_idxs
             if not isinstance(layer, tuple(self.target_types)):
                 continue
@@ -738,21 +737,23 @@ class DeltaLossImportance(Importance):
 
                     # 计算损失变化作为重要性分数
                     loss_change = original_loss - pruned_loss
-                    group_imp.append(torch.tensor([loss_change]))
+                    group_imp.append(loss_change)
                     group_idxs.append(root_idxs)
 
                     # 恢复原始参数
-                    print('idx:',idx)
-                    print('weight:',layer.weight.data)
+                    #print('idx:',idx)
+                    #print('weight:',layer.weight.data)
                     layer.weight.data[idx] = original_param
 
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
-
+        group_imp = torch.stack(group_imp)
+        group_idxs = torch.tensor(group_idxs).flatten()
         group_imp = self._reduce(group_imp,group_idxs)
         group_imp = self._normalize(group_imp,'mean')
 
+        print(group_imp)
         return group_imp
 
 
