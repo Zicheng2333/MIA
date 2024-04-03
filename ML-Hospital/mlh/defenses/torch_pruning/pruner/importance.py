@@ -698,9 +698,6 @@ class DeltaLossImportance(Importance):
         return reduced_imp
 
     def evaluate_loss(self, model):
-        """
-        在给定的数据加载器上评估模型的平均损失。
-        """
         model.eval()  # 设置模型为评估模式
         total_loss = 0.0
         with torch.no_grad():  # 不计算梯度
@@ -727,38 +724,26 @@ class DeltaLossImportance(Importance):
             if not isinstance(layer, tuple(self.target_types)):
                 continue
 
-            # 备份原始参数
-            original_params = deepcopy(layer.state_dict())
+            print('evaluating layer:',layer)
 
-            # 模拟剪枝
-            print(self.model)
-            print(layer)
-            print(idxs)
-            for i in idxs:
-                idx = []
-                idx.append(i)
-
-                prune_fn(layer, idx)
-
-                # 计算剪枝后的模型在验证集上的损失
-                print(self.model)
+            for idx in idxs:
+                original_param = layer.weight.data[idx]
+                layer.weight.data[idx] = 0
                 pruned_loss = self.evaluate_loss(self.model)
 
                 # 计算损失变化作为重要性分数
                 loss_change = original_loss-pruned_loss
-                group_imp.append(torch.tensor([loss_change], device=self.device))
+                group_imp.append(torch.tensor([loss_change]))
                 group_idxs.append(root_idxs)
 
                 # 恢复原始参数
-                layer.load_state_dict(original_params)
-
+                layer.weight.data[idx] = original_param
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
         group_imp = self._reduce(group_imp,group_idxs)
         group_imp = self._normalize(group_imp,'mean')
-
 
         return group_imp
 
