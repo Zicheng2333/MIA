@@ -727,7 +727,7 @@ class DeltaLossImportance(Importance):
             print('evaluating layer:',layer)
             print('idxs:',idxs)
 
-            for idx in idxs:
+            '''            for idx in idxs:
                 original_param = layer.weight.data[idx].clone()
                 layer.weight.data[idx] = 0
 
@@ -741,7 +741,7 @@ class DeltaLossImportance(Importance):
                 # 恢复原始参数
                 #print('idx:',idx)
                 #print('weight:',layer.weight.data)
-                layer.weight.data[idx] = original_param
+                layer.weight.data[idx] = original_param'''
 
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
