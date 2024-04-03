@@ -637,6 +637,8 @@ class DeltaLossImportance(Importance):
         self.device = device
         self.target_types = target_types
 
+        self.group_reduction = 'mean' #TODO 还没有指定传入参数
+
     def _normalize(self, group_importance, normalizer):
         if normalizer is None:
             return group_importance
