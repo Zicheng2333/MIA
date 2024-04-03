@@ -250,6 +250,7 @@ class GroupNormImportance(Importance):
 
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
+        print(group_imp)
         return group_imp
 
 
@@ -319,7 +320,6 @@ class RandomImportance(Importance):
     @torch.no_grad()
     def __call__(self, group, **kwargs):
         _, idxs = group[0]
-        print(group[0])
         return torch.rand(len(idxs))
 
 
