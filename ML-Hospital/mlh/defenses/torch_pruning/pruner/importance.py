@@ -251,7 +251,7 @@ class GroupNormImportance(Importance):
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
-        print(group_imp)
+        print(group_imp.shape)
 
         return group_imp
 
