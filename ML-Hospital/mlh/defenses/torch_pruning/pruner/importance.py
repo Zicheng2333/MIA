@@ -796,14 +796,13 @@ class DeltaLossImportance(Importance):
                             layer.weight.data[:, idx, :, :] = original_param
                         else:
                             layer.weight.data[idx] = original_param
-                        #layer.weight.data[:, idx, :, :] = original_param if not hasattr(layer, "transposed") else \
-                        #layer.weight.data[idx] = original_param
 
                 local_imp = torch.tensor(local_imp)
 
                 if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
-                    local_imp = local_imp.repeat_interleave(layer.groups)
+                    local_imp = local_imp.repeat(layer.groups)
 
+                local_imp = local_imp[idxs]
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
@@ -833,16 +832,6 @@ class DeltaLossImportance(Importance):
                             local_imp_bias = torch.tensor(local_imp_bias_scores)
                             group_imp.append(local_imp_bias)
                             group_idxs.append(root_idxs)
-
-
-                # repeat importance for group convolutions
-                if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
-                    local_imp = local_imp.repeat(layer.groups)
-
-                local_imp = local_imp[idxs]
-                group_imp.append(local_imp)
-                group_idxs.append(root_idxs)
-
 
             ####################
             # LayerNorm
