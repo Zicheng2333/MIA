@@ -51,7 +51,7 @@ class TrainTargetNormal(Trainer):
         self.args.sparsity_learning = False
         if self.args.method == "random":
             imp = tp.importance.RandomImportance()
-            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning) #固定global_pruning=self.args.global_pruning
         elif self.args.method == "l1":
             imp = tp.importance.MagnitudeImportance(p=1)
             pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
@@ -81,7 +81,7 @@ class TrainTargetNormal(Trainer):
                                    global_pruning=self.args.global_pruning)
 
         elif self.args.method == 'MIA':
-            imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device)
+            imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device,False)
             pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
 
         else:
