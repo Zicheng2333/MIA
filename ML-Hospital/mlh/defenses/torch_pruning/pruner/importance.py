@@ -182,11 +182,8 @@ class GroupNormImportance(Importance):
             ]:
                 if hasattr(layer, "transposed") and layer.transposed:
                     w = layer.weight.data.transpose(1, 0)[idxs].flatten(1)
-                    print('single weight w:', w)
                 else:
-
                     w = layer.weight.data[idxs].flatten(1)
-                    print('single weight w:', w)
                 local_imp = w.abs().pow(self.p).sum(1)
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
@@ -728,34 +725,148 @@ class DeltaLossImportance(Importance):
 
             print('evaluating layer:', layer)
             print('idxs:', idxs)
+
+            local_imp = []
             ####################
             # Conv/Linear Output
             ####################
+            if prune_fn in [
+                function.prune_conv_out_channels,
+                function.prune_linear_out_channels,
+            ]:
+                if hasattr(layer, "transposed") and layer.transposed:
+                    for idx in idxs:
+                        original_param = layer.weight.data[:, idx, :, :].clone()
+                        layer.weight.data[:, idx, :, :] = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[:, idx, :, :] = original_param
 
-            temp_imp = []
+                else:
+                    for idx in idxs:
+                        original_param = layer.weight.data[idx].clone()
+                        layer.weight.data[idx] = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[idx] = original_param
 
-            for idx in idxs:
-                if(idx<layer.weight.data.shape[0]):
-                    original_param = layer.weight.data[idx].clone()
-                    layer.weight.data[idx] = 0.0
+                group_imp.append(torch.tensor(local_imp))
+                group_idxs.append(root_idxs)
 
-                    #pruned_loss = self.evaluate_loss(self.model)
-                    pruned_loss = 0
+                if self.bias and layer.bias is not None:
+                    local_imp = []
+                    for idx in idxs:
+                        original_param = layer.bias.data[idx].clone()
+                        layer.bias.data[idx] = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.bias.data[idx] = original_param
 
-                    # 计算损失变化作为重要性分数
-                    loss_change = -pruned_loss
-                    temp_imp.append(loss_change)
+                    group_imp.append(torch.tensor(local_imp))
+                    group_idxs.append(root_idxs)
 
-                    # 恢复原始参数
-                    #print('idx:',idx)
-                    #print('weight:',layer.weight.data)
-                    layer.weight.data[idx] = original_param
+            ####################
+            # Conv/Linear Input
+            ####################
+            elif prune_fn in [
+                function.prune_conv_in_channels,
+                function.prune_linear_in_channels,
+            ]:
+                if hasattr(layer, "transposed") and layer.transposed:
+                    for idx in idxs:
+                        original_param = layer.weight.data[idx].clone()
+                        layer.weight.data = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[idx] = original_param
 
-            if temp_imp:
-                layer_imp = torch.tensor(temp_imp)
-                group_imp.append(layer_imp)
-                group_idxs.append(idxs)
+                else:
 
+                    for idx in idxs:
+                        original_param = layer.weight.data[:, idx, :, :].clone() if not hasattr(
+                            layer,"transposed") else layer.weight.data[idx].clone()
+                        layer.weight.data[:, idx, :, :] = 0 if not hasattr(layer, "transposed") \
+                            else layer.weight.data[idx] = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[:, idx, :, :] = original_param if not hasattr(layer, "transposed") else \
+                        layer.weight.data[idx] = original_param
+
+                local_imp = torch.tensor(local_imp)
+
+                if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
+                    local_imp = local_imp.repeat_interleave(layer.groups)
+
+                group_imp.append(local_imp)
+                group_idxs.append(root_idxs)
+
+            ####################
+            # BatchNorm
+            ####################
+            elif prune_fn == function.prune_batchnorm_out_channels:
+                if layer.affine:
+                    for idx in idxs:
+                        original_param = layer.weight.data[idx].clone()
+                        layer.weight.data[idx] = 0
+                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[idx] = original_param
+
+                        group_imp.append(torch.tensor(local_imp))
+                        group_idxs.append(root_idxs)
+
+                        if self.bias and layer.bias is not None:
+                            local_imp_bias_scores = []
+                            for idx in idxs:
+                                original_bias = layer.bias.data[idx].clone()
+                                layer.bias.data[idx] = 0
+                                loss_impact_bias = self.evaluate_loss(self.model)
+                                local_imp_bias_scores.append(loss_impact_bias)
+                                layer.bias.data[idx] = original_bias
+
+                            local_imp_bias = torch.tensor(local_imp_bias_scores)
+                            group_imp.append(local_imp_bias)
+                            group_idxs.append(root_idxs)
+
+
+
+
+
+
+
+
+
+                # repeat importance for group convolutions
+                if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
+                    local_imp = local_imp.repeat(layer.groups)
+
+                local_imp = local_imp[idxs]
+                group_imp.append(local_imp)
+                group_idxs.append(root_idxs)
+
+
+            ####################
+            # LayerNorm
+            ####################
+            elif prune_fn == function.prune_layernorm_out_channels:
+                if layer.elementwise_affine:
+                    for idx in idxs:
+                        original_weight = layer.weight.data[idx].clone()
+                        layer.weight.data[idx] = 0
+                        loss_impact = self.evaluate_loss(self.model)
+                        local_imp.append(loss_impact)
+                        layer.weight.data[idx] = original_weight
+
+                    local_imp = torch.tensor(local_imp)
+                    group_imp.append(local_imp)
+                    group_idxs.append(root_idxs)
+
+                    if self.bias and layer.bias is not None:
+                        local_imp_bias_scores = []
+                        for idx in idxs:
+                            original_bias = layer.bias.data[idx].clone()
+                            layer.bias.data[idx] = 0
+                            loss_impact_bias = self.evaluate_loss(self.model)
+                            local_imp_bias_scores.append(loss_impact_bias)
+                            layer.bias.data[idx] = original_bias
+
+                        local_imp_bias = torch.tensor(local_imp_bias_scores)
+                        group_imp.append(local_imp_bias)
+                        group_idxs.append(root_idxs)
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
