@@ -715,20 +715,22 @@ class DeltaLossImportance(Importance):
 
     @torch.no_grad()
     def __call__(self, group: Group):
-        # 计算原始模型在验证集上的损失
-        original_loss = self.evaluate_loss(self.model)
-
         group_imp = []
         group_idxs = []
         # 遍历group中的每个依赖项和索引
         for i, (dep, idxs) in enumerate(group):
             layer = dep.layer
+            prune_fn = dep.pruning_fn
             root_idxs = group[i].root_idxs
             if not isinstance(layer, tuple(self.target_types)):
                 continue
 
-            print('evaluating layer:',layer)
-            print('idxs:',idxs)
+            print('evaluating layer:', layer)
+            print('idxs:', idxs)
+            ####################
+            # Conv/Linear Output
+            ####################
+
             temp_imp = []
 
             for idx in idxs:
