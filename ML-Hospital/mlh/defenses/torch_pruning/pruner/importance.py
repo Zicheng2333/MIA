@@ -181,8 +181,10 @@ class GroupNormImportance(Importance):
                 function.prune_linear_out_channels,
             ]:
                 if hasattr(layer, "transposed") and layer.transposed:
+                    print('single weight w:', w)
                     w = layer.weight.data.transpose(1, 0)[idxs].flatten(1)
                 else:
+                    print('single weight w:', w)
                     w = layer.weight.data[idxs].flatten(1)
                 local_imp = w.abs().pow(self.p).sum(1)
                 group_imp.append(local_imp)
@@ -250,8 +252,6 @@ class GroupNormImportance(Importance):
 
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
-
-        print(group_imp.shape)
 
         return group_imp
 
