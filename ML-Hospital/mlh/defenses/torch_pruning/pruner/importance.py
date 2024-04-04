@@ -248,14 +248,14 @@ class GroupNormImportance(Importance):
         if len(group_imp) == 0: # skip groups without parameterized layers
             return None
 
-        group_imp_str = str(group_imp)
-        with open('group_imp_norm.txt', 'a') as f:
-            f.write(group_imp_str)
 
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
         print(group_imp)
+        group_imp_str = str(group_imp)
+        with open('group_imp_norm.txt', 'a') as f:
+            f.write(group_imp_str)
 
         return group_imp
 
