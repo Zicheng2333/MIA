@@ -873,8 +873,8 @@ class DeltaLossImportance(Importance):
         with open('group_imp_delta.txt', 'a') as f:
             f.write(group_imp_str)
 
-        group_imp = self._reduce(group_imp,group_idxs)
-        group_imp = self._normalize(group_imp,'mean')
+        #group_imp = self._reduce(group_imp,group_idxs)
+        #group_imp = self._normalize(group_imp,'mean')
         print('final improtacne:',group_imp)
         return group_imp
 
