@@ -249,7 +249,7 @@ class GroupNormImportance(Importance):
             return None
 
         group_imp_str = str(group_imp)
-        with open('group_imp_norm.txt', 'w') as f:
+        with open('group_imp_norm.txt', 'a') as f:
             f.write(group_imp_str)
 
         group_imp = self._reduce(group_imp, group_idxs)
