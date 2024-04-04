@@ -703,13 +703,13 @@ class DeltaLossImportance(Importance):
     def evaluate_loss(self, model):
         model.eval()  # 设置模型为评估模式
         total_loss = 0.0
-        with torch.no_grad():  # 不计算梯度
+        '''        with torch.no_grad():  # 不计算梯度
             for inputs, targets in self.val_loader:
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = model(inputs)
                 criterion = nn.CrossEntropyLoss()
                 loss = criterion(outputs, targets)
-                total_loss += loss.item()
+                total_loss += loss.item()'''
         return total_loss
 
     @torch.no_grad()
@@ -766,43 +766,36 @@ class DeltaLossImportance(Importance):
             ####################
             # Conv/Linear Input
             ####################
-            elif prune_fn in [
-                function.prune_conv_in_channels,
-                function.prune_linear_in_channels,
-            ]:
-                if hasattr(layer, "transposed") and layer.transposed:
-                    for idx in idxs:
+
+            if prune_fn in [function.prune_conv_in_channels, function.prune_linear_in_channels]:
+                for idx in idxs:
+                    if hasattr(layer, "transposed") and layer.transposed:
                         original_param = layer.weight.data[idx].clone()
-                        layer.weight.data = 0
-                        local_imp.append(self.evaluate_loss(self.model))
+                        layer.weight.data[idx] = 0
+                    elif layer.weight.data.dim() == 4:
+                        original_param = layer.weight.data[:, idx, :, :].clone()
+                        layer.weight.data[:, idx, :, :] = 0
+                    elif layer.weight.data.dim() == 2:
+                        original_param = layer.weight.data[:, idx].clone()
+                        layer.weight.data[:, idx] = 0
+                    else:
+                        raise ValueError("Unsupported layer type or dimension.")
+
+                    loss_impact = self.evaluate_loss(self.model)
+                    local_imp.append(loss_impact)
+
+                    if hasattr(layer, "transposed") and layer.transposed:
                         layer.weight.data[idx] = original_param
-
-                else:
-
-                    for idx in idxs:
-                        original_param = layer.weight.data[:, idx, :, :].clone() if not hasattr(
-                            layer,"transposed") else layer.weight.data[idx].clone()
-
-                        if not hasattr(layer, "transposed"):
-                            layer.weight.data[:, idx, :, :] = 0
-                        else:
-                            layer.weight.data[idx] = 0
-                        #layer.weight.data[:, idx, :, :] = 0 if not hasattr(layer, "transposed") \
-                        #    else layer.weight.data[idx] = 0
-
-                        local_imp.append(self.evaluate_loss(self.model))
-
-                        if not hasattr(layer, "transposed"):
-                            layer.weight.data[:, idx, :, :] = original_param
-                        else:
-                            layer.weight.data[idx] = original_param
+                    elif layer.weight.data.dim() == 4:
+                        layer.weight.data[:, idx, :, :] = original_param
+                    elif layer.weight.data.dim() == 2:
+                        layer.weight.data[:, idx] = original_param
 
                 local_imp = torch.tensor(local_imp)
 
                 if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
-                    local_imp = local_imp.repeat(layer.groups)
+                    local_imp = local_imp.repeat_interleave(layer.groups)
 
-                local_imp = local_imp[idxs]
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
