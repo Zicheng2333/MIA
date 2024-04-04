@@ -781,8 +781,14 @@ class DeltaLossImportance(Importance):
                     for idx in idxs:
                         original_param = layer.weight.data[:, idx, :, :].clone() if not hasattr(
                             layer,"transposed") else layer.weight.data[idx].clone()
-                        layer.weight.data[:, idx, :, :] = 0 if not hasattr(layer, "transposed") \
-                            else layer.weight.data[idx] = 0
+
+                        if not hasattr(layer, "transposed"):
+                            layer.weight.data[:, idx, :, :] = 0
+                        else:
+                            layer.weight.data[idx] = 0
+                        #layer.weight.data[:, idx, :, :] = 0 if not hasattr(layer, "transposed") \
+                        #    else layer.weight.data[idx] = 0
+
                         local_imp.append(self.evaluate_loss(self.model))
                         layer.weight.data[:, idx, :, :] = original_param if not hasattr(layer, "transposed") else \
                         layer.weight.data[idx] = original_param
@@ -821,13 +827,6 @@ class DeltaLossImportance(Importance):
                             local_imp_bias = torch.tensor(local_imp_bias_scores)
                             group_imp.append(local_imp_bias)
                             group_idxs.append(root_idxs)
-
-
-
-
-
-
-
 
 
                 # repeat importance for group convolutions
