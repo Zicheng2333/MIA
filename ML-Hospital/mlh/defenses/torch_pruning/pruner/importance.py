@@ -328,6 +328,10 @@ class RandomImportance(Importance):
         _, idxs = group[0]
         re = torch.rand(len(idxs))
 
+        group_imp_str = str(re)
+        with open('group_imp_random.txt', 'a') as f:
+            f.write(group_imp_str)
+
         return re
 
 
