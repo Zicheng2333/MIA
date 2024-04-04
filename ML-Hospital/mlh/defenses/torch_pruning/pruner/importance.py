@@ -729,36 +729,38 @@ class DeltaLossImportance(Importance):
 
             print('evaluating layer:',layer)
             print('idxs:',idxs)
+            temp_imp = []
 
             for idx in idxs:
                 if(idx<layer.weight.data.shape[0]):
                     original_param = layer.weight.data[idx].clone()
-                    layer.weight.data[idx] = 0
+                    layer.weight.data[idx] = 0.0
 
                     #pruned_loss = self.evaluate_loss(self.model)
                     pruned_loss = 0
 
                     # 计算损失变化作为重要性分数
-                    loss_change = original_loss - pruned_loss
-                    group_imp.append(loss_change)
-                    group_idxs.append(root_idxs)
+                    loss_change = -pruned_loss
+                    temp_imp.append(loss_change)
 
                     # 恢复原始参数
                     #print('idx:',idx)
                     #print('weight:',layer.weight.data)
                     layer.weight.data[idx] = original_param
 
+            if temp_imp:
+                layer_imp = torch.tensor(temp_imp)
+                group_imp.append(layer_imp)
+                group_idxs.append(idxs)
+
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
-        print(group_imp)
-        group_imp = torch.stack(group_imp)
-        group_idxs = torch.tensor(group_idxs).flatten()
+        print('raw imp:',group_imp)
         group_imp = self._reduce(group_imp,group_idxs)
         group_imp = self._normalize(group_imp,'mean')
-
-        print(group_imp)
+        print('final improtacne:',group_imp)
         return group_imp
 
 
