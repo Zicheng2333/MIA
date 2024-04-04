@@ -629,7 +629,7 @@ class HessianImportance(GroupHessianImportance):
 _helpers = namedtuple('GroupItem', ['dep', 'idxs'])
 
 class DeltaLossImportance(Importance):
-    def __init__(self,model,val_loader,device,
+    def __init__(self,model,val_loader,device,bias,
                  target_types: list = [nn.modules.conv._ConvNd, nn.Linear, nn.modules.batchnorm._BatchNorm, nn.LayerNorm]):
         self.model = model
         self.val_loader = val_loader
@@ -638,6 +638,7 @@ class DeltaLossImportance(Importance):
         self.target_types = target_types
 
         self.group_reduction = 'mean' #TODO 还没有指定传入参数
+        self.bias = bias
 
     def _normalize(self, group_importance, normalizer):
         if normalizer is None:
