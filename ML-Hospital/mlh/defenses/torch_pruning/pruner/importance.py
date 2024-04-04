@@ -248,6 +248,10 @@ class GroupNormImportance(Importance):
         if len(group_imp) == 0: # skip groups without parameterized layers
             return None
 
+        group_imp_str = str(group_imp)
+        with open('group_imp_norm.txt', 'w') as f:
+            f.write(group_imp_str)
+
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
@@ -705,7 +709,7 @@ class DeltaLossImportance(Importance):
     def evaluate_loss(self, model):
         model.eval()  # 设置模型为评估模式
         total_loss = 0.0
-        '''        with torch.no_grad():  # 不计算梯度
+        '''        with torch.no_grad(): 
             for inputs, targets in self.val_loader:
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = model(inputs)
@@ -718,7 +722,6 @@ class DeltaLossImportance(Importance):
     def __call__(self, group: Group):
         group_imp = []
         group_idxs = []
-        # 遍历group中的每个依赖项和索引
         for i, (dep, idxs) in enumerate(group):
             layer = dep.layer
             prune_fn = dep.pruning_fn
@@ -861,6 +864,11 @@ class DeltaLossImportance(Importance):
             return None
 
         print('raw imp:',group_imp)
+
+        group_imp_str = str(group_imp)
+        with open('group_imp_delta.txt', 'a') as f:
+            f.write(group_imp_str)
+
         group_imp = self._reduce(group_imp,group_idxs)
         group_imp = self._normalize(group_imp,'mean')
         print('final improtacne:',group_imp)
