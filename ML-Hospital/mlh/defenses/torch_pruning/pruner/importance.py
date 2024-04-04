@@ -168,14 +168,15 @@ class GroupNormImportance(Importance):
         group_idxs = []
         # Iterate over all groups and estimate group importance
         for i, (dep, idxs) in enumerate(group):
-            print('evaluating layer:', layer)
-            print('idxs:', idxs)
 
             layer = dep.layer
             prune_fn = dep.pruning_fn
             root_idxs = group[i].root_idxs
             if not isinstance(layer, tuple(self.target_types)):
                 continue
+
+            print('evaluating layer:', layer)
+            print('idxs:', idxs)
             ####################
             # Conv/Linear Output
             ####################
