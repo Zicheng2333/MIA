@@ -790,8 +790,13 @@ class DeltaLossImportance(Importance):
                         #    else layer.weight.data[idx] = 0
 
                         local_imp.append(self.evaluate_loss(self.model))
-                        layer.weight.data[:, idx, :, :] = original_param if not hasattr(layer, "transposed") else \
-                        layer.weight.data[idx] = original_param
+
+                        if not hasattr(layer, "transposed"):
+                            layer.weight.data[:, idx, :, :] = original_param
+                        else:
+                            layer.weight.data[idx] = original_param
+                        #layer.weight.data[:, idx, :, :] = original_param if not hasattr(layer, "transposed") else \
+                        #layer.weight.data[idx] = original_param
 
                 local_imp = torch.tensor(local_imp)
 
