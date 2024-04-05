@@ -885,15 +885,20 @@ class DeltaLossImportance(Importance):
             f.write('###########################################')
             f.write(group_imp_str)
             f.write('###########################################')
-        final_imp = group_imp[0].to(self.device)
 
-        #final_imp_str = str(final_imp)
-        #with open('group_imp_delta.txt', 'a') as f:
-        #    f.write('###########################################')
-        #    f.write(final_imp_str)
-        #    f.write('###########################################')
-        #final_imp = self._reduce(final_imp,group_idxs)
-        #final_imp = self._normalize(final_imp,'mean')
+
+        final_imp = []
+        len = group_imp[0].size(0)
+        for i in group_imp:
+            if i.size(0) == len:
+                final_imp.append(group_imp[i].to(self.device))
+        final_imp_str = str(final_imp)
+        with open('group_imp_delta.txt', 'a') as f:
+            f.write('###########################################')
+            f.write(final_imp_str)
+            f.write('###########################################')
+        final_imp = self._reduce(final_imp,group_idxs)
+        final_imp = self._normalize(final_imp,'mean')
         #print('final improtacne:',group_imp)
         return final_imp
 
