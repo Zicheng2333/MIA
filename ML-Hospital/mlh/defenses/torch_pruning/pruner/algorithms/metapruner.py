@@ -244,7 +244,7 @@ class MetaPruner:
         group.prune()
 
     def estimate_importance(self, group) -> torch.Tensor:
-        print('estimate_importance')
+        #print('estimate_importance')
         return self.importance(group)
 
     def pruning_history(self) -> typing.List[typing.Tuple[str, bool, typing.Union[list, tuple]]]:
