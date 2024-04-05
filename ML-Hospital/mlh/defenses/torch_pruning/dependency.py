@@ -311,11 +311,11 @@ class DependencyGraph(object):
         example_inputs: typing.Union[torch.Tensor, typing.Sequence, typing.Dict],
         forward_fn: typing.Callable[[torch.nn.Module, typing.Union[torch.Tensor, typing.Sequence]], torch.Tensor] = None,
         output_transform: typing.Callable = None,
-        unwrapped_parameters: typing.Dict[nn.Parameter, int] = None,
+        unwrapped_parameters: typing.Dict[nn.Parameter, int] = None, #未包装的参数字典，包含不属于torch.nn的参数
         customized_pruners: typing.Dict[ typing.Union[typing.Any, torch.nn.Module],function.BasePruningFunc] = None,
         ignored_layers: typing.List[nn.Module] = None,
         ignored_params: typing.List[nn.Parameter] = None,
-        verbose: bool = True,
+        verbose: bool = True, #输出详细信息
     ) -> "DependencyGraph":
         """Build a dependency graph through tracing.
         Args:
