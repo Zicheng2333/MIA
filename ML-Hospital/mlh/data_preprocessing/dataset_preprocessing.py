@@ -58,14 +58,14 @@ def prepare_dataset(dataset, select_num=None):
     return target_train, target_inference, target_test, shadow_train, shadow_inference, shadow_test'''
 
     length = len(dataset)
-    each_length = (length-1024)//6
+    each_length = (length-256)//4
     # if we specify a number, we use the number to split data
     if select_num != None and select_num < each_length:
         each_length = select_num
     # print(dataset.category_label_index_dict)
     torch.manual_seed(0)
     target_train, target_inference, target_test, shadow_train, shadow_inference, shadow_test, _ = torch.utils.data.random_split(
-        dataset, [each_length, 512, each_length, each_length, 512, each_length, len(dataset)-(each_length*4)-1024])
+        dataset, [each_length, 128, each_length, each_length, 128, each_length, len(dataset)-(each_length*4)-256])
     return target_train, target_inference, target_test, shadow_train, shadow_inference, shadow_test
 
 
