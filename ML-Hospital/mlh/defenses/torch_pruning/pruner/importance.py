@@ -164,6 +164,7 @@ class GroupNormImportance(Importance):
     
     @torch.no_grad()
     def __call__(self, group: Group):
+        print('method called')
         group_imp = []
         group_idxs = []
         # Iterate over all groups and estimate group importance
@@ -175,8 +176,8 @@ class GroupNormImportance(Importance):
             if not isinstance(layer, tuple(self.target_types)):
                 continue
 
-            print('evaluating layer:', layer)
-            print('idxs:', idxs)
+            #print('evaluating layer:', layer)
+            #print('idxs:', idxs)
             ####################
             # Conv/Linear Output
             ####################
@@ -332,9 +333,9 @@ class RandomImportance(Importance):
         _, idxs = group[0]
         re = torch.rand(len(idxs))
 
-        group_imp_str = str(re)
-        with open('group_imp_random.txt', 'a') as f:
-            f.write(group_imp_str)
+        #group_imp_str = str(re)
+        #with open('group_imp_random.txt', 'a') as f:
+        #    f.write(group_imp_str)
 
         return re
 
@@ -743,7 +744,7 @@ class DeltaLossImportance(Importance):
             print('evaluating layer:', layer)
             print('idxs:', idxs)
 
-            '''            for idx in idxs:
+            for idx in idxs:
                 if (idx < layer.weight.data.shape[0]):
                     original_param = layer.weight.data[idx].clone()
                     layer.weight.data[idx] = 0
@@ -757,7 +758,7 @@ class DeltaLossImportance(Importance):
                     group_idxs.append(root_idxs)
 
                     # 恢复原始参数
-                    layer.weight.data[idx] = original_param'''
+                    layer.weight.data[idx] = original_param
 
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
