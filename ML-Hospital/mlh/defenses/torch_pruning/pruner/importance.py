@@ -164,7 +164,7 @@ class GroupNormImportance(Importance):
     
     @torch.no_grad()
     def __call__(self, group: Group):
-        print('method called')
+        #print('method called')
         group_imp = []
         group_idxs = []
         # Iterate over all groups and estimate group importance
@@ -253,14 +253,16 @@ class GroupNormImportance(Importance):
         if len(group_imp) == 0: # skip groups without parameterized layers
             return None
 
-
+        print('###########################################')
+        print(group_imp)
+        print('###########################################')
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
 
-        group_imp_str = str(group_imp)
-        with open('group_imp_norm.txt', 'a') as f:
-            f.write(group_imp_str)
+        #group_imp_str = str(group_imp)
+        #with open('group_imp_norm.txt', 'a') as f:
+        #    f.write(group_imp_str)
 
         return group_imp
 
@@ -728,52 +730,9 @@ class DeltaLossImportance(Importance):
         return total_loss
 
     @torch.no_grad()
+
+
     def __call__(self, group: Group):
-        print('method called')
-
-        original_loss = self.evaluate_loss(self.model)
-
-        group_imp = []
-        group_idxs = []
-
-        for i, (dep, idxs) in enumerate(group):
-            layer = dep.layer
-            root_idxs = group[i].root_idxs
-            if not isinstance(layer, tuple(self.target_types)):
-                continue
-
-            print('evaluating layer:', layer)
-            print('idxs:', idxs)
-
-            for idx in idxs:
-                if (idx < layer.weight.data.shape[0]):
-                    original_param = layer.weight.data[idx].clone()
-                    layer.weight.data[idx] = 0
-
-                    # pruned_loss = self.evaluate_loss(self.model)
-                    pruned_loss = 0
-
-                    # 计算损失变化作为重要性分数
-                    loss_change = original_loss - pruned_loss
-                    group_imp.append(loss_change)
-                    group_idxs.append(root_idxs)
-
-                    # 恢复原始参数
-                    layer.weight.data[idx] = original_param
-
-        if len(group_imp) == 0:  # skip groups without parameterized layers
-            return None
-
-        print(group_imp)
-        group_imp = torch.stack(group_imp)
-        group_idxs = torch.tensor(group_idxs).flatten()
-        group_imp = self._reduce(group_imp, group_idxs)
-        group_imp = self._normalize(group_imp, 'mean')
-
-        print(group_imp)
-        return group_imp
-
-    '''    def __call__(self, group: Group):
         group_imp = []
         group_idxs = []
         for i, (dep, idxs) in enumerate(group):
@@ -914,16 +873,17 @@ class DeltaLossImportance(Importance):
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
+        print('###########################################')
         print('raw imp:',group_imp)
-
-        group_imp_str = str(group_imp)
-        with open('group_imp_delta.txt', 'a') as f:
-            f.write(group_imp_str)
+        print('###########################################')
+        #group_imp_str = str(group_imp)
+        #with open('group_imp_delta.txt', 'a') as f:
+        #    f.write(group_imp_str)
 
         #group_imp = self._reduce(group_imp,group_idxs)
         #group_imp = self._normalize(group_imp,'mean')
-        print('final improtacne:',group_imp)
+        #print('final improtacne:',group_imp)
         return group_imp
-'''
+
 
 
