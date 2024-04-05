@@ -719,13 +719,13 @@ class DeltaLossImportance(Importance):
     def evaluate_loss(self, model):
         model.eval()  # 设置模型为评估模式
         total_loss = 0.0
-        with torch.no_grad():
+        '''        with torch.no_grad():
             for inputs, targets in self.val_loader:
                 inputs, targets = inputs.to(self.device), targets.to(self.device)
                 outputs = model(inputs)
                 criterion = nn.CrossEntropyLoss()
                 loss = criterion(outputs, targets)
-                total_loss += loss.item()
+                total_loss += loss.item()'''
         return total_loss
 
     @torch.no_grad()
@@ -886,12 +886,11 @@ class DeltaLossImportance(Importance):
         #    f.write(group_imp_str)
         #    f.write('###########################################')
 
-
         final_imp = []
         length = group_imp[0].size(0)
         for i in group_imp:
             if i.size(0) == length:
-                final_imp.append(group_imp[i].to(self.device))
+                final_imp.append(i.to(self.device))
         final_imp_str = str(final_imp)
         with open('group_imp_delta.txt', 'a') as f:
             f.write('###########################################')
@@ -899,7 +898,7 @@ class DeltaLossImportance(Importance):
             f.write('###########################################')
         final_imp = self._reduce(final_imp,group_idxs)
         final_imp = self._normalize(final_imp,'mean')
-        #print('final improtacne:',group_imp)
+
         return final_imp
 
 
