@@ -253,16 +253,18 @@ class GroupNormImportance(Importance):
         if len(group_imp) == 0: # skip groups without parameterized layers
             return None
 
-        print('###########################################')
-        print(group_imp)
-        print('###########################################')
+        #print('###########################################')
+        #print(group_imp)
+        #print('###########################################')
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
 
-        #group_imp_str = str(group_imp)
-        #with open('group_imp_norm.txt', 'a') as f:
-        #    f.write(group_imp_str)
+        group_imp_str = str(group_imp)
+        with open('group_imp_norm.txt', 'a') as f:
+            f.write('###########################################')
+            f.write(group_imp_str)
+            f.write('###########################################')
 
         return group_imp
 
@@ -873,12 +875,14 @@ class DeltaLossImportance(Importance):
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
-        print('###########################################')
-        print('raw imp:',group_imp)
-        print('###########################################')
-        #group_imp_str = str(group_imp)
-        #with open('group_imp_delta.txt', 'a') as f:
-        #    f.write(group_imp_str)
+        #print('###########################################')
+        #print('raw imp:',group_imp)
+        #print('###########################################')
+        group_imp_str = str(group_imp)
+        with open('group_imp_delta.txt', 'a') as f:
+            f.write('###########################################')
+            f.write(group_imp_str)
+            f.write('###########################################')
 
         #group_imp = self._reduce(group_imp,group_idxs)
         #group_imp = self._normalize(group_imp,'mean')
