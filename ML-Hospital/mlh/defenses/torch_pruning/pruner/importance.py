@@ -874,7 +874,7 @@ class DeltaLossImportance(Importance):
                         group_imp.append(local_imp_bias)
                         group_idxs.append(root_idxs)
 
-        group_imp.to(self.device)
+        #group_imp.to(self.device)
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
@@ -887,11 +887,12 @@ class DeltaLossImportance(Importance):
         #    f.write('###########################################')
         #    f.write(group_imp_str)
         #    f.write('###########################################')
+        final_imp = group_imp[0].to(self.device)
 
-        group_imp = self._reduce(group_imp[0],group_idxs)
-        group_imp = self._normalize(group_imp,'mean')
+        final_imp = self._reduce(final_imp,group_idxs)
+        final_imp = self._normalize(final_imp,'mean')
         #print('final improtacne:',group_imp)
-        return group_imp
+        return final_imp
 
 
 
