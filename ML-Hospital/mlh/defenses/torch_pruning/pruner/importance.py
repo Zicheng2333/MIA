@@ -256,15 +256,17 @@ class GroupNormImportance(Importance):
         #print('###########################################')
         #print(group_imp)
         #print('###########################################')
-        group_imp = self._reduce(group_imp, group_idxs)
-        group_imp = self._normalize(group_imp, self.normalizer)
-
-
         group_imp_str = str(group_imp)
         with open('group_imp_norm.txt', 'a') as f:
             f.write('###########################################')
             f.write(group_imp_str)
             f.write('###########################################')
+
+        group_imp = self._reduce(group_imp, group_idxs)
+        group_imp = self._normalize(group_imp, self.normalizer)
+
+
+
 
         return group_imp
 
