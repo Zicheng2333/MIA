@@ -164,7 +164,7 @@ class GroupNormImportance(Importance):
     
     @torch.no_grad()
     def __call__(self, group: Group):
-        #print('method called')
+        print('method called')
         group_imp = []
         group_idxs = []
         # Iterate over all groups and estimate group importance
