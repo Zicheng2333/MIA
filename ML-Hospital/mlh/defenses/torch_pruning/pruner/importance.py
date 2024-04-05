@@ -876,7 +876,6 @@ class DeltaLossImportance(Importance):
         if len(group_imp) == 0:  # skip groups without parameterized layers
             return None
 
-
         #print('###########################################')
         #print('raw imp:',group_imp)
         #print('###########################################')
@@ -891,11 +890,12 @@ class DeltaLossImportance(Importance):
         for i in group_imp:
             if i.size(0) == length:
                 final_imp.append(i.to(self.device))
+        '''        
         final_imp_str = str(final_imp)
         with open('group_imp_delta.txt', 'a') as f:
             f.write('###########################################')
             f.write(final_imp_str)
-            f.write('###########################################')
+            f.write('###########################################')'''
         final_imp = self._reduce(final_imp,group_idxs)
         final_imp = self._normalize(final_imp,'mean')
 
