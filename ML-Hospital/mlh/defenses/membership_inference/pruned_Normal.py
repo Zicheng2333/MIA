@@ -48,6 +48,7 @@ class TrainTargetNormal(Trainer):
         return current_speed_up
 
     def get_pruner(self, model, example_inputs):
+        print('get pruner')
         self.args.sparsity_learning = False
         if self.args.method == "random":
             imp = tp.importance.RandomImportance()
