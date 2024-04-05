@@ -736,6 +736,9 @@ class DeltaLossImportance(Importance):
         group_idxs = []
         for i, (dep, idxs) in enumerate(group):
             layer = dep.layer
+
+            print('evaluating layer:',layer)
+
             prune_fn = dep.pruning_fn
             root_idxs = group[i].root_idxs
             if not isinstance(layer, tuple(self.target_types)):
