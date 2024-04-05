@@ -39,7 +39,7 @@ class TrainTargetNormal(Trainer):
         base_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
         current_speed_up = 1
         while current_speed_up < speed_up: #计算模型速度提升与预期提升的比率
-            print('step')
+            print('prunner step')
             pruner.step(interactive=False)
             pruned_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
             current_speed_up = float(base_ops) / pruned_ops
@@ -83,7 +83,7 @@ class TrainTargetNormal(Trainer):
 
         elif self.args.method == 'MIA':
             imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device,False)
-            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning,iterative_steps = 5, pruning_ratio = 0.7)
 
         else:
             raise NotImplementedError
