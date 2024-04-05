@@ -880,17 +880,17 @@ class DeltaLossImportance(Importance):
         #print('###########################################')
         #print('raw imp:',group_imp)
         #print('###########################################')
-        group_imp_str = str(group_imp)
-        with open('group_imp_delta.txt', 'a') as f:
-            f.write('###########################################')
-            f.write(group_imp_str)
-            f.write('###########################################')
+        #group_imp_str = str(group_imp)
+        #with open('group_imp_delta.txt', 'a') as f:
+        #    f.write('###########################################')
+        #    f.write(group_imp_str)
+        #    f.write('###########################################')
 
 
         final_imp = []
-        len = group_imp[0].size(0)
+        length = group_imp[0].size(0)
         for i in group_imp:
-            if i.size(0) == len:
+            if i.size(0) == length:
                 final_imp.append(group_imp[i].to(self.device))
         final_imp_str = str(final_imp)
         with open('group_imp_delta.txt', 'a') as f:
