@@ -735,7 +735,7 @@ class DeltaLossImportance(Importance):
         group_imp = []
         group_idxs = []
         for i, (dep, idxs) in enumerate(group):
-            layer = dep.layer
+            layer = dep.layer.to(self.device)
 
             print('evaluating layer:',layer)
 
@@ -755,7 +755,7 @@ class DeltaLossImportance(Importance):
                 if hasattr(layer, "transposed") and layer.transposed:
                     for idx in idxs:
                         original_param = layer.weight.data[:, idx, :, :].clone()
-                        layer.weight.data[:, idx, :, :] = 0
+                        layer.weight.data[:, idx, :, :] *= 0
                         local_imp.append(self.evaluate_loss(self.model))
                         layer.weight.data[:, idx, :, :] = original_param
 
@@ -766,18 +766,18 @@ class DeltaLossImportance(Importance):
                         local_imp.append(self.evaluate_loss(self.model))
                         layer.weight.data[idx] = original_param
 
-                group_imp.append(torch.tensor(local_imp))
+                group_imp.append(torch.tensor(local_imp,device=self.device))
                 group_idxs.append(root_idxs)
 
                 if self.bias and layer.bias is not None:
                     local_imp = []
                     for idx in idxs:
                         original_param = layer.bias.data[idx].clone()
-                        layer.bias.data[idx] = 0
+                        layer.bias.data[idx] *= 0
                         local_imp.append(self.evaluate_loss(self.model))
                         layer.bias.data[idx] = original_param
 
-                    group_imp.append(torch.tensor(local_imp))
+                    group_imp.append(torch.tensor(local_imp,device=self.device))
                     group_idxs.append(root_idxs)
 
             ####################
@@ -788,13 +788,13 @@ class DeltaLossImportance(Importance):
                 for idx in idxs:
                     if hasattr(layer, "transposed") and layer.transposed:
                         original_param = layer.weight.data[idx].clone()
-                        layer.weight.data[idx] = 0
+                        layer.weight.data[idx] *= 0
                     elif layer.weight.data.dim() == 4:
                         original_param = layer.weight.data[:, idx, :, :].clone()
-                        layer.weight.data[:, idx, :, :] = 0
+                        layer.weight.data[:, idx, :, :] *= 0
                     elif layer.weight.data.dim() == 2:
                         original_param = layer.weight.data[:, idx].clone()
-                        layer.weight.data[:, idx] = 0
+                        layer.weight.data[:, idx] *= 0
                     else:
                         raise ValueError("Unsupported layer type or dimension.")
 
@@ -808,7 +808,7 @@ class DeltaLossImportance(Importance):
                     elif layer.weight.data.dim() == 2:
                         layer.weight.data[:, idx] = original_param
 
-                local_imp = torch.tensor(local_imp)
+                local_imp = torch.tensor(local_imp,device=self.device)
 
                 if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
                     local_imp = local_imp.repeat_interleave(layer.groups)
@@ -823,23 +823,23 @@ class DeltaLossImportance(Importance):
                 if layer.affine:
                     for idx in idxs:
                         original_param = layer.weight.data[idx].clone()
-                        layer.weight.data[idx] = 0
+                        layer.weight.data[idx] *= 0
                         local_imp.append(self.evaluate_loss(self.model))
                         layer.weight.data[idx] = original_param
 
-                        group_imp.append(torch.tensor(local_imp))
+                        group_imp.append(torch.tensor(local_imp,device=self.device))
                         group_idxs.append(root_idxs)
 
                         if self.bias and layer.bias is not None:
                             local_imp_bias_scores = []
                             for idx in idxs:
                                 original_bias = layer.bias.data[idx].clone()
-                                layer.bias.data[idx] = 0
+                                layer.bias.data[idx] *= 0
                                 loss_impact_bias = self.evaluate_loss(self.model)
                                 local_imp_bias_scores.append(loss_impact_bias)
                                 layer.bias.data[idx] = original_bias
 
-                            local_imp_bias = torch.tensor(local_imp_bias_scores)
+                            local_imp_bias = torch.tensor(local_imp_bias_scores,device=self.device)
                             group_imp.append(local_imp_bias)
                             group_idxs.append(root_idxs)
 
@@ -850,12 +850,12 @@ class DeltaLossImportance(Importance):
                 if layer.elementwise_affine:
                     for idx in idxs:
                         original_weight = layer.weight.data[idx].clone()
-                        layer.weight.data[idx] = 0
+                        layer.weight.data[idx] *= 0
                         loss_impact = self.evaluate_loss(self.model)
                         local_imp.append(loss_impact)
                         layer.weight.data[idx] = original_weight
 
-                    local_imp = torch.tensor(local_imp)
+                    local_imp = torch.tensor(local_imp,device=self.device)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
@@ -863,12 +863,12 @@ class DeltaLossImportance(Importance):
                         local_imp_bias_scores = []
                         for idx in idxs:
                             original_bias = layer.bias.data[idx].clone()
-                            layer.bias.data[idx] = 0
+                            layer.bias.data[idx] *= 0
                             loss_impact_bias = self.evaluate_loss(self.model)
                             local_imp_bias_scores.append(loss_impact_bias)
                             layer.bias.data[idx] = original_bias
 
-                        local_imp_bias = torch.tensor(local_imp_bias_scores)
+                        local_imp_bias = torch.tensor(local_imp_bias_scores,device=self.device)
                         group_imp.append(local_imp_bias)
                         group_idxs.append(root_idxs)
 
