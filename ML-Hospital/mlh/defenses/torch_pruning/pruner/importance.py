@@ -165,7 +165,7 @@ class GroupNormImportance(Importance):
     @torch.no_grad()
     def __call__(self, group: Group):
         print('method called')
-        group_imp = []
+        '''group_imp = []
         group_idxs = []
         # Iterate over all groups and estimate group importance
         for i, (dep, idxs) in enumerate(group):
@@ -262,7 +262,7 @@ class GroupNormImportance(Importance):
         with open('group_imp_norm.txt', 'a') as f:
             f.write(group_imp_str)
 
-        return group_imp
+        return group_imp'''
 
 
 class BNScaleImportance(GroupNormImportance):
@@ -729,8 +729,9 @@ class DeltaLossImportance(Importance):
 
     @torch.no_grad()
     def __call__(self, group: Group):
+        print('method called')
 
-        original_loss = self.evaluate_loss(self.model)
+        '''original_loss = self.evaluate_loss(self.model)
 
         group_imp = []
         group_idxs = []
@@ -770,7 +771,7 @@ class DeltaLossImportance(Importance):
         group_imp = self._normalize(group_imp, 'mean')
 
         print(group_imp)
-        return group_imp
+        return group_imp'''
 
     '''    def __call__(self, group: Group):
         group_imp = []
