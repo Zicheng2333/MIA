@@ -83,7 +83,7 @@ class TrainTargetNormal(Trainer):
 
         elif self.args.method == 'MIA':
             imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device,False)
-            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning,iterative_steps = 5, pruning_ratio = 0.7)
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning,iterative_steps = 3, pruning_ratio = 0.7)
 
         else:
             raise NotImplementedError
