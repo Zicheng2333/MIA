@@ -173,6 +173,8 @@ class GroupNormImportance(Importance):
             layer = dep.layer
             prune_fn = dep.pruning_fn
             root_idxs = group[i].root_idxs
+
+            print('evaluating layer:',layer)
             if not isinstance(layer, tuple(self.target_types)):
                 continue
 

@@ -39,6 +39,7 @@ class TrainTargetNormal(Trainer):
         base_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
         current_speed_up = 1
         while current_speed_up < speed_up: #计算模型速度提升与预期提升的比率
+            print('step')
             pruner.step(interactive=False)
             pruned_ops, _ = tp.utils.count_ops_and_params(model, example_inputs=example_inputs)
             current_speed_up = float(base_ops) / pruned_ops
