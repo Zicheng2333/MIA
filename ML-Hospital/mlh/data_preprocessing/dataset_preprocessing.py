@@ -65,7 +65,7 @@ def prepare_dataset(dataset, select_num=None):
     # print(dataset.category_label_index_dict)
     torch.manual_seed(0)
     target_train, target_inference, target_test, shadow_train, shadow_inference, shadow_test, _ = torch.utils.data.random_split(
-        dataset, [each_length, 512, each_length, each_length, 512, each_length, len(dataset)-(each_length*6)])
+        dataset, [each_length, 512, each_length, each_length, 512, each_length, len(dataset)-(each_length*4)-1024])
     return target_train, target_inference, target_test, shadow_train, shadow_inference, shadow_test
 
 
