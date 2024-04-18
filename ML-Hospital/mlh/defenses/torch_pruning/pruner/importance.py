@@ -162,15 +162,6 @@ class GroupNormImportance(Importance):
             reduced_imp /= len(group_imp)
         return reduced_imp
 
-    def log(self,local_imp,num):
-        with open('group_imp_norm.txt', 'a') as f:
-            f.write('###########################################')
-            f.write(num)
-            f.write('###########################################')
-            f.write(local_imp)
-            f.write('###########################################')
-
-
 
     @torch.no_grad()
     def __call__(self, group: Group):
@@ -201,14 +192,14 @@ class GroupNormImportance(Importance):
                     w = layer.weight.data[idxs].flatten(1)
                 local_imp = w.abs().pow(self.p).sum(1)
 
-                self.log(local_imp,1)
+
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
                 if self.bias and layer.bias is not None:
                     local_imp = layer.bias.data[idxs].abs().pow(self.p)
 
-                    self.log(local_imp, 2)
+
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
@@ -231,7 +222,7 @@ class GroupNormImportance(Importance):
 
                 local_imp = local_imp[idxs]
 
-                self.log(local_imp, 3)
+
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
@@ -244,14 +235,14 @@ class GroupNormImportance(Importance):
                     w = layer.weight.data[idxs]
                     local_imp = w.abs().pow(self.p)
 
-                    self.log(local_imp, 4)
+
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
                     if self.bias and layer.bias is not None:
                         local_imp = layer.bias.data[idxs].abs().pow(self.p)
 
-                        self.log(local_imp, 5)
+
                         group_imp.append(local_imp)
                         group_idxs.append(root_idxs)
             ####################
@@ -263,14 +254,14 @@ class GroupNormImportance(Importance):
                     w = layer.weight.data[idxs]
                     local_imp = w.abs().pow(self.p)
 
-                    self.log(local_imp, 6)
+
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
                     if self.bias and layer.bias is not None:
                         local_imp = layer.bias.data[idxs].abs().pow(self.p)
 
-                        self.log(local_imp, 7)
+
                         group_imp.append(local_imp)
                         group_idxs.append(root_idxs)
 
@@ -756,6 +747,14 @@ class DeltaLossImportance(Importance):
 
     @torch.no_grad()
 
+    def log(self,local_imp,num):
+        with open('group_imp_norm.txt', 'a') as f:
+            f.write('###########################################')
+            f.write(num)
+            f.write('###########################################')
+            f.write(local_imp)
+            f.write('###########################################')
+
 
     def __call__(self, group: Group):
         group_imp = []
@@ -782,15 +781,23 @@ class DeltaLossImportance(Importance):
                     for idx in idxs:
                         original_param = layer.weight.data[:, idx, :, :].clone()
                         layer.weight.data[:, idx, :, :] *= 0
+
                         local_imp.append(self.evaluate_loss(self.model))
+                        self.log(local_imp, 1)
+
                         layer.weight.data[:, idx, :, :] = original_param
 
                 else:
                     for idx in idxs:
                         original_param = layer.weight.data[idx].clone()
                         layer.weight.data[idx] = 0
+
+
                         local_imp.append(self.evaluate_loss(self.model))
+                        self.log(local_imp, 2)
                         layer.weight.data[idx] = original_param
+
+
 
                 group_imp.append(torch.tensor(local_imp,device=self.device))
                 group_idxs.append(root_idxs)
@@ -800,7 +807,10 @@ class DeltaLossImportance(Importance):
                     for idx in idxs:
                         original_param = layer.bias.data[idx].clone()
                         layer.bias.data[idx] *= 0
+
+
                         local_imp.append(self.evaluate_loss(self.model))
+                        self.log(local_imp, 3)
                         layer.bias.data[idx] = original_param
 
                     group_imp.append(torch.tensor(local_imp,device=self.device))
@@ -826,6 +836,8 @@ class DeltaLossImportance(Importance):
 
                     loss_impact = self.evaluate_loss(self.model)
                     local_imp.append(loss_impact)
+                    self.log(local_imp, 4)
+
 
                     if hasattr(layer, "transposed") and layer.transposed:
                         layer.weight.data[idx] = original_param
@@ -834,10 +846,13 @@ class DeltaLossImportance(Importance):
                     elif layer.weight.data.dim() == 2:
                         layer.weight.data[:, idx] = original_param
 
+
                 local_imp = torch.tensor(local_imp,device=self.device)
 
                 if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
+
                     local_imp = local_imp.repeat_interleave(layer.groups)
+                    self.log(local_imp, 5)
 
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
@@ -851,6 +866,8 @@ class DeltaLossImportance(Importance):
                         original_param = layer.weight.data[idx].clone()
                         layer.weight.data[idx] *= 0
                         local_imp.append(self.evaluate_loss(self.model))
+
+                        self.log(local_imp, 6)
                         layer.weight.data[idx] = original_param
 
                         group_imp.append(torch.tensor(local_imp,device=self.device))
@@ -865,6 +882,7 @@ class DeltaLossImportance(Importance):
                                 local_imp_bias_scores.append(loss_impact_bias)
                                 layer.bias.data[idx] = original_bias
 
+                            self.log(local_imp_bias_scores, 7)
                             local_imp_bias = torch.tensor(local_imp_bias_scores,device=self.device)
                             group_imp.append(local_imp_bias)
                             group_idxs.append(root_idxs)
@@ -881,6 +899,7 @@ class DeltaLossImportance(Importance):
                         local_imp.append(loss_impact)
                         layer.weight.data[idx] = original_weight
 
+                    self.log(local_imp, 8)
                     local_imp = torch.tensor(local_imp,device=self.device)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
@@ -895,6 +914,8 @@ class DeltaLossImportance(Importance):
                             layer.bias.data[idx] = original_bias
 
                         local_imp_bias = torch.tensor(local_imp_bias_scores,device=self.device)
+
+                        self.log(local_imp_bias, 9)
                         group_imp.append(local_imp_bias)
                         group_idxs.append(root_idxs)
 
