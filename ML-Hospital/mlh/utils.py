@@ -77,6 +77,8 @@ def parse_args():
     parser.add_argument("--sl-restore", type=str, default=None)
     parser.add_argument("--iterative-steps", default=400, type=int)
 
+    parser.add_argument("--pruning-ratio", type=float, default=1.0)
+
     args = parser.parse_args()
 
     #args.input_shape = [int(item) for item in args.input_shape.split(',')]
