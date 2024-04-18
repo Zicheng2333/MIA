@@ -273,7 +273,7 @@ class GroupNormImportance(Importance):
             #f.write('###########################################')
             #f.write(group_imp_str)
             #f.write('###########################################')
-
+        print(len(group_imp))
         group_imp = self._reduce(group_imp, group_idxs)
         group_imp = self._normalize(group_imp, self.normalizer)
 
@@ -939,6 +939,7 @@ class DeltaLossImportance(Importance):
         for i in group_imp:
             if i.size(0) == length:
                 final_imp.append(i.to(self.device))
+        print(len(final_imp))
         '''        
         final_imp_str = str(final_imp)
         with open('group_imp_delta.txt', 'a') as f:
