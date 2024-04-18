@@ -795,7 +795,7 @@ class DeltaLossImportance(Importance):
 
                     local_imp.append(self.evaluate_loss(self.model))
                     self.log(local_imp, 2)
-                        layer.weight.data[idx_last] = original_param
+                    layer.weight.data[idx_last] = original_param
                     '''                    for idx in idxs:
                         original_param = layer.weight.data[idx].clone()
                         layer.weight.data[idx] = 0
