@@ -749,11 +749,13 @@ class DeltaLossImportance(Importance):
 
     def log(self,local_imp,num):
         with open('group_imp_norm.txt', 'a') as f:
-            f.write('###########################################\n')
-            f.write(str(num)+'\n')
-            f.write('###########################################\n')
-            f.write(str(local_imp)+'\n')
-            f.write('###########################################\n')
+                    f.write('###########################################\n')
+                    f.write(str(num)+'\n')
+                    f.write('###########################################\n')
+                    f.write(str(local_imp)+'\n')
+                    f.write('###########################################\n')
+
+
 
 
     def __call__(self, group: Group):
@@ -783,31 +785,21 @@ class DeltaLossImportance(Importance):
                         layer.weight.data[:, idx, :, :] *= 0
 
                         local_imp.append(self.evaluate_loss(self.model))
-                        self.log(local_imp, 1)
+
 
                         layer.weight.data[:, idx, :, :] = original_param
 
                 else:
-                    idx_last = idxs[-1]
-
-                    original_param = layer.weight.data[idx_last].clone()
-                    layer.weight.data[idx_last] = 0
-
-                    local_imp.append(self.evaluate_loss(self.model))
-                    self.log(local_imp, 2)
-                    layer.weight.data[idx_last] = original_param
-                    '''                    for idx in idxs:
+                    for idx in idxs:
                         original_param = layer.weight.data[idx].clone()
                         layer.weight.data[idx] = 0
 
 
                         local_imp.append(self.evaluate_loss(self.model))
-                        self.log(local_imp, 2)
-                        layer.weight.data[idx] = original_param'''
 
+                        layer.weight.data[idx] = original_param
 
-
-
+                self.log(local_imp, 2)
                 group_imp.append(torch.tensor(local_imp,device=self.device))
                 group_idxs.append(root_idxs)
 
@@ -819,9 +811,10 @@ class DeltaLossImportance(Importance):
 
 
                         local_imp.append(self.evaluate_loss(self.model))
-                        self.log(local_imp, 3)
+
                         layer.bias.data[idx] = original_param
 
+                    self.log(local_imp, 3)
                     group_imp.append(torch.tensor(local_imp,device=self.device))
                     group_idxs.append(root_idxs)
 
@@ -845,7 +838,6 @@ class DeltaLossImportance(Importance):
 
                     loss_impact = self.evaluate_loss(self.model)
                     local_imp.append(loss_impact)
-                    self.log(local_imp, 4)
 
 
                     if hasattr(layer, "transposed") and layer.transposed:
@@ -861,8 +853,8 @@ class DeltaLossImportance(Importance):
                 if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
 
                     local_imp = local_imp.repeat_interleave(layer.groups)
-                    self.log(local_imp, 5)
 
+                self.log(local_imp, 5)
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
@@ -908,8 +900,9 @@ class DeltaLossImportance(Importance):
                         local_imp.append(loss_impact)
                         layer.weight.data[idx] = original_weight
 
-                    self.log(local_imp, 8)
+
                     local_imp = torch.tensor(local_imp,device=self.device)
+                    self.log(local_imp, 8)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
