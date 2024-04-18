@@ -161,7 +161,17 @@ class GroupNormImportance(Importance):
         if self.group_reduction == "mean":
             reduced_imp /= len(group_imp)
         return reduced_imp
-    
+
+    def log(self,local_imp,num):
+        with open('group_imp_norm.txt', 'a') as f:
+            f.write('###########################################')
+            f.write(num)
+            f.write('###########################################')
+            f.write(local_imp)
+            f.write('###########################################')
+
+
+
     @torch.no_grad()
     def __call__(self, group: Group):
         #print('method called')
@@ -190,11 +200,15 @@ class GroupNormImportance(Importance):
                 else:
                     w = layer.weight.data[idxs].flatten(1)
                 local_imp = w.abs().pow(self.p).sum(1)
+
+                self.log(local_imp,1)
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
                 if self.bias and layer.bias is not None:
                     local_imp = layer.bias.data[idxs].abs().pow(self.p)
+
+                    self.log(local_imp, 2)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
@@ -216,6 +230,8 @@ class GroupNormImportance(Importance):
                     local_imp = local_imp.repeat(layer.groups)
 
                 local_imp = local_imp[idxs]
+
+                self.log(local_imp, 3)
                 group_imp.append(local_imp)
                 group_idxs.append(root_idxs)
 
@@ -227,11 +243,15 @@ class GroupNormImportance(Importance):
                 if layer.affine:
                     w = layer.weight.data[idxs]
                     local_imp = w.abs().pow(self.p)
+
+                    self.log(local_imp, 4)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
                     if self.bias and layer.bias is not None:
                         local_imp = layer.bias.data[idxs].abs().pow(self.p)
+
+                        self.log(local_imp, 5)
                         group_imp.append(local_imp)
                         group_idxs.append(root_idxs)
             ####################
@@ -242,18 +262,22 @@ class GroupNormImportance(Importance):
                 if layer.elementwise_affine:
                     w = layer.weight.data[idxs]
                     local_imp = w.abs().pow(self.p)
+
+                    self.log(local_imp, 6)
                     group_imp.append(local_imp)
                     group_idxs.append(root_idxs)
 
                     if self.bias and layer.bias is not None:
                         local_imp = layer.bias.data[idxs].abs().pow(self.p)
+
+                        self.log(local_imp, 7)
                         group_imp.append(local_imp)
                         group_idxs.append(root_idxs)
 
         if len(group_imp) == 0: # skip groups without parameterized layers
             return None
 
-        group_imp_str = str(group_imp)
+        #group_imp_str = str(group_imp)
         #with open('group_imp_norm.txt', 'a') as f:
             #f.write('###########################################')
             #f.write(group_imp_str)
