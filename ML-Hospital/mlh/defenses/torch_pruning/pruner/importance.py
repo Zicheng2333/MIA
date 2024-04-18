@@ -750,7 +750,7 @@ class DeltaLossImportance(Importance):
     def log(self,local_imp,num):
         with open('group_imp_norm.txt', 'a') as f:
             f.write('###########################################')
-            f.write(num)
+            f.write(str(num))
             f.write('###########################################')
             f.write(local_imp)
             f.write('###########################################')
