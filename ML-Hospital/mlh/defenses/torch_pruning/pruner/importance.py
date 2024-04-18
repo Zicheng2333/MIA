@@ -752,7 +752,7 @@ class DeltaLossImportance(Importance):
             f.write('###########################################')
             f.write(str(num))
             f.write('###########################################')
-            f.write(local_imp)
+            f.write(str(local_imp))
             f.write('###########################################')
 
 
