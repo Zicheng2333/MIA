@@ -762,7 +762,7 @@ class DeltaLossImportance(Importance):
         group_imp = []
         group_idxs = []
         for i, (dep, idxs) in enumerate(group):
-            layer = dep.layer.to(self.device)
+            layer = dep.layer
 
             print('evaluating layer:',layer)
 
