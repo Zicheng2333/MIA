@@ -101,30 +101,18 @@ class TrainTargetNormal(Trainer):
 
         # Here we fix iterative_steps=200 to prune the model progressively with small steps
         # until the required speed up is achieved.
-        if not self.args.method == 'MIA':
-            pruner = pruner_entry(
-                model,
-                example_inputs,
-                importance=imp,
-                iterative_steps=self.args.iterative_steps,
-                pruning_ratio=1.0,
-                pruning_ratio_dict=pruning_ratio_dict,
-                max_pruning_ratio=self.args.max_pruning_ratio,
-                ignored_layers=ignored_layers,
-                unwrapped_parameters=unwrapped_parameters,
-            )
-        else:
-            pruner = pruner_entry(
-                model,
-                example_inputs,
-                importance=imp,
-                iterative_steps=self.args.iterative_steps,
-                pruning_ratio=self.args.pruning_ratio,
-                pruning_ratio_dict=pruning_ratio_dict,
-                max_pruning_ratio=self.args.max_pruning_ratio,
-                ignored_layers=ignored_layers,
-                unwrapped_parameters=unwrapped_parameters,
-            )
+
+        pruner = pruner_entry(
+            model,
+            example_inputs,
+            importance=imp,
+            iterative_steps=self.args.iterative_steps,
+            pruning_ratio=self.args.pruning_ratio,
+            pruning_ratio_dict=pruning_ratio_dict,
+            max_pruning_ratio=self.args.max_pruning_ratio,
+            ignored_layers=ignored_layers,
+            unwrapped_parameters=unwrapped_parameters,
+        )
         return pruner
 
     def eval(self,  test_loader):
