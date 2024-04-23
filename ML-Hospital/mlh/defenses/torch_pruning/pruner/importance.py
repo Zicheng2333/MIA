@@ -409,21 +409,22 @@ class GroupTaylorImportance(GroupNormImportance):
                 function.prune_conv_out_channels,
                 function.prune_linear_out_channels,
             ]:
-                if hasattr(layer, "transposed") and layer.transposed:
-                    w = layer.weight.data.transpose(1, 0)[idxs].flatten(1)
-                    dw = layer.weight.grad.data.transpose(1, 0)[
-                        idxs].flatten(1)
-                else:
-                    w = layer.weight.data[idxs].flatten(1)
-                    dw = layer.weight.grad.data[idxs].flatten(1)
-                if self.multivariable:
-                    local_imp = (w * dw).sum(1).abs()
-                else:
-                    local_imp = (w * dw).abs().sum(1)
-                group_imp.append(local_imp)
-                group_idxs.append(root_idxs)
+                if layer.weight.grad is not None:
+                    if hasattr(layer, "transposed") and layer.transposed:
+                        w = layer.weight.data.transpose(1, 0)[idxs].flatten(1)
+                        dw = layer.weight.grad.data.transpose(1, 0)[
+                            idxs].flatten(1)
+                    else:
+                        w = layer.weight.data[idxs].flatten(1)
+                        dw = layer.weight.grad.data[idxs].flatten(1)
+                    if self.multivariable:
+                        local_imp = (w * dw).sum(1).abs()
+                    else:
+                        local_imp = (w * dw).abs().sum(1)
+                    group_imp.append(local_imp)
+                    group_idxs.append(root_idxs)
 
-                if self.bias and layer.bias is not None:
+                if self.bias and layer.bias is not None and layer.bias.grad is not None:
                     b = layer.bias.data[idxs]
                     db = layer.bias.grad.data[idxs]
                     local_imp = (b * db).abs()
@@ -435,24 +436,25 @@ class GroupTaylorImportance(GroupNormImportance):
                 function.prune_conv_in_channels,
                 function.prune_linear_in_channels,
             ]:
-                if hasattr(layer, "transposed") and layer.transposed:
-                    w = (layer.weight).flatten(1)
-                    dw = (layer.weight.grad).flatten(1)
-                else:
-                    w = (layer.weight).transpose(0, 1).flatten(1)
-                    dw = (layer.weight.grad).transpose(0, 1).flatten(1)
-                if self.multivariable:
-                    local_imp = (w * dw).sum(1).abs()
-                else:
-                    local_imp = (w * dw).abs().sum(1)
-                
-                # repeat importance for group convolutions
-                if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
-                    local_imp = local_imp.repeat(layer.groups)
-                local_imp = local_imp[idxs]
+                if layer.weight.grad is not None:
+                    if hasattr(layer, "transposed") and layer.transposed:
+                        w = (layer.weight).flatten(1)
+                        dw = (layer.weight.grad).flatten(1)
+                    else:
+                        w = (layer.weight).transpose(0, 1).flatten(1)
+                        dw = (layer.weight.grad).transpose(0, 1).flatten(1)
+                    if self.multivariable:
+                        local_imp = (w * dw).sum(1).abs()
+                    else:
+                        local_imp = (w * dw).abs().sum(1)
 
-                group_imp.append(local_imp)
-                group_idxs.append(root_idxs)
+                    # repeat importance for group convolutions
+                    if prune_fn == function.prune_conv_in_channels and layer.groups != layer.in_channels and layer.groups != 1:
+                        local_imp = local_imp.repeat(layer.groups)
+                    local_imp = local_imp[idxs]
+
+                    group_imp.append(local_imp)
+                    group_idxs.append(root_idxs)
 
             # BN
             elif prune_fn == function.prune_groupnorm_out_channels:
