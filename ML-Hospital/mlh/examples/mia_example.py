@@ -53,6 +53,8 @@ if __name__ == "__main__":
     target_path = f'{args.log_path}/{args.dataset}/{args.training_type}/target/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth'
     shadow_path = f'{args.log_path}/{args.dataset}/{args.training_type}/shadow/{args.dataset}/{args.mode}/{args.dataset}_{args.model}.pth'
 
+    print(args.device)
+
     if args.mode == 'prune':
         print('pruned MIA!')
         # 加载目标模型
