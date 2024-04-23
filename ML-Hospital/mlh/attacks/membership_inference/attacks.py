@@ -62,6 +62,7 @@ class ModelParser():
     def __init__(self, args, model):
         self.args = args
         self.device = self.args.device
+        print(self.device+'device')
         self.model = model.to(self.device)
 
     def get_posteriors(self, dataloader):
@@ -260,22 +261,22 @@ class MetricBasedMIA(MembershipInferenceAttack):
         self.parse_data_metric_based_attacks()
 
         train_tuple0, test_tuple0, test_results0 = self._mem_inf_via_corr()
-        self.print_result("correct train", train_tuple0)
+        #self.print_result("correct train", train_tuple0)
         self.print_result("correct test", test_tuple0)
 
         train_tuple1, test_tuple1, test_results1 = self._mem_inf_thre(
             'confidence', self.s_tr_conf, self.s_te_conf, self.t_tr_conf, self.t_te_conf)
-        self.print_result("confidence train", train_tuple1)
+        #self.print_result("confidence train", train_tuple1)
         self.print_result("confidence test", test_tuple1)
 
         train_tuple2, test_tuple2, test_results2 = self._mem_inf_thre(
             'entropy', -self.s_tr_entr, -self.s_te_entr, -self.t_tr_entr, -self.t_te_entr)
-        self.print_result("entropy train", train_tuple2)
+        #self.print_result("entropy train", train_tuple2)
         self.print_result("entropy test", test_tuple2)
 
         train_tuple3, test_tuple3, test_results3 = self._mem_inf_thre(
             'modified entropy', -self.s_tr_m_entr, -self.s_te_m_entr, -self.t_tr_m_entr, -self.t_te_m_entr)
-        self.print_result("modified entropy train", train_tuple3)
+        #self.print_result("modified entropy train", train_tuple3)
         self.print_result("modified entropy test", test_tuple3)
 
     def print_result(self, name, given_tuple):
