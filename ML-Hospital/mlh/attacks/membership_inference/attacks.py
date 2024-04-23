@@ -62,16 +62,16 @@ class ModelParser():
     def __init__(self, args, model):
         self.args = args
         self.device = self.args.device
-        print(self.device+'device')
         self.model = model.to(self.device)
 
     def get_posteriors(self, dataloader):
         info = {}
         target_list = []
         posteriors_list = []
+        model = self.model.to(self.device)
         for btch_idx, (inputs, targets) in tqdm(enumerate(dataloader)):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
-            outputs = self.model(inputs)
+            outputs = model(inputs)
             posteriors = F.softmax(outputs, dim=1)
 
             target_list += targets.cpu().tolist()
