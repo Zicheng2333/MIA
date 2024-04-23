@@ -81,9 +81,13 @@ class TrainTargetNormal(Trainer):
             pruner_entry = partial(tp.pruner.GrowingRegPruner, reg=self.args.reg, delta_reg=self.args.delta_reg,
                                    global_pruning=self.args.global_pruning)
 
+        elif self.args.method == 'Taylor':
+            imp = tp.importance.GroupTaylorImportance()
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
+
         elif self.args.method == 'MIA':
             imp = tp.importance.DeltaLossImportance(self.model,self.val_loader,self.device,False)
-            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning, pruning_ratio = 0.7)
+            pruner_entry = partial(tp.pruner.MagnitudePruner, global_pruning=self.args.global_pruning)
 
         else:
             raise NotImplementedError
